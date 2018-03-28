@@ -1,6 +1,6 @@
 import os
 
-if __name__ == '__main__':
+def shrinkTexts():
 
 	print('Creating inputs directory...',end='')
 	os.makedirs('input', exist_ok=True)

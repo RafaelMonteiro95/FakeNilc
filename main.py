@@ -1,19 +1,36 @@
 import os
-import sys
 
-from arffextractor import liwc, bow, arff, pos
+from arffextractor import liwc, bow, arff, pos, preprocessing, textshrink
+
 
 if __name__ == '__main__':
 
+	filenames = []
+	tags = []
+
+	parameters = {	'LIWC' : [filenames, tags, None, None, False],
+					'BoW-Freq' : [filenames, tags, None, None, None],
+					'BoW-Tfidf' : [filenames, tags, None, None, None],
+					'BoW-Freq-100' : [filenames, tags, 100, None, None],
+					'BoW-Tfidf-100' : [filenames, tags, 100, None, None],
+					'POS' : [filenames, tags, None, False, None]}
+
+	methods = {	'LIWC' : liwc.loadLiwc,
+				'BoW-Freq' : bow.loadCount,
+				'BoW-Tfidf' : bow.loadTfidf,
+				'BoW-Freq-100' : bow.loadCount,
+				'BoW-Tfidf-100' : bow.loadTfidf,
+				'POS' : pos.loadPos}
+
 	print('Starting...', flush = True)
 
-	print('Creating output directory...',end='', flush = True)
+	print('Creating output directory... ',end='', flush = True)
 	os.makedirs('output', exist_ok=True)
 	print('Done!', flush = True)
 
+	textshrink.shrinkTexts()
+
 	# Loading corpus
-	filenames = []
-	tags = []
 
 	print('Loading filenames... ',end='', flush = True)
 
@@ -31,45 +48,9 @@ if __name__ == '__main__':
 
 	print('Using',int(len(filenames)),'files.',int(len(filenames)/2),'fake and',int(len(filenames)/2),'real news.', flush = True)
 
-	#LIWC
-	print('Processing LIWC... ',end='', flush = True)
-	liwcdata = liwc.loadLiwc(filenames, tags, total_normalization = False)
-	print('Done!\nWriting ARFF... ',end='', flush = True)
-	arff.createARFF(liwcdata['labels'],liwcdata['data'],relation='liwc', filename='output/liwc.arff')
-	print('Done!', flush = True)
-
-	#BAG OF WORDS - FREQUENCY
-	print('Processing BoW... ',end='', flush = True)
-	count = bow.loadCount(filenames, tags)
-	print('Done!\nWriting ARFF... ',end='', flush = True)
-	arff.createARFF(count['labels'],count['data'],relation='bag-of-words-frequency', filename='output/count.arff')
-	print('Done!', flush = True)
-
-	#BAG OF WORDS - TF-IDF
-	print('Processing BoW Tf-Idf... ',end='', flush = True)
-	tfidf = bow.loadTfidf(filenames, tags)
-	print('Done!\nWriting ARFF... ',end='', flush = True)
-	arff.createARFF(tfidf['labels'],tfidf['data'],relation='bag-of-words-tf-idf', filename='output/tfidf.arff')
-	print('Done!', flush = True)
-
-	#BAG OF WORDS - FREQUENCY
-	print('Processing BoW with 100 features... ',end='', flush = True)
-	count = bow.loadCount(filenames, tags, max_features = 100)
-	print('Done!\nWriting ARFF... ',end='', flush = True)
-	arff.createARFF(count['labels'],count['data'],relation='bag-of-words-frequency-100', filename='output/count100.arff')
-	print('Done!', flush = True)
-
-	#BAG OF WORDS - TF-IDF
-	print('Processing BoW Tf-Idf with 100 features... ',end='', flush = True)
-	tfidf = bow.loadTfidf(filenames, tags, max_features = 100)
-	print('Done!\nWriting ARFF... ',end='', flush = True)
-	arff.createARFF(tfidf['labels'],tfidf['data'],relation='bag-of-words-tf-idf-100', filename='output/tfidf100.arff')
-	print('Done!', flush = True)
-
-	#POS TAGS
-	print('Processing POS Tags... ',end='', flush = True)
-	postags = pos.loadPos(filenames, tags, normalize = False)
-	print('Done!\nWriting ARFF... ',end='', flush = True)
-	arff.createARFF(postags['labels'],postags['data'],relation='POS-tags', filename='output/postags.arff')
-	print('Done!', flush = True)
-
+	for feature in methods:
+		print('Processing',feature,'... ',end='', flush = True)
+		data = methods[feature](*parameters[feature])
+		print('Done!\nWriting ARFF... ',end='', flush = True)
+		arff.createARFF(data['labels'], data['data'],relation='feature', filename=('output/' + feature.lower() + '.arff'))
+		print('Done! saved to "' + ('output/' + feature.lower() + '.arff"'), flush = True)

@@ -1,37 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from nltk.corpus import stopwords
-import nltk
-import re
-import string
+from arffextractor import preprocessing
 
 #supress some warnings about type conversion
 import warnings
 with warnings.catch_warnings():
 	warnings.filterwarnings("ignore",category=FutureWarning)
 	from nlpnet import POSTagger
-
-
-def prep(s, useStopWords = False):
-
-	#preparation
-	cachedStopWords = stopwords.words('portuguese')
-	stemmer = nltk.stem.SnowballStemmer('portuguese')
-	translator = str.maketrans({key:' ' for key in string.punctuation});
-	
-	#removing ponctuation
-	result = s.translate(translator);
-
-	#removing numbers
-	result = re.sub('[0-9]', '' , result)
-
-	#removing stopwords
-	if useStopWords:
-		result = ' '.join([word.lower() for word in result.split() if word not in cachedStopWords])
-	else:
-		result = ' '.join([word.lower() for word in result.split()])
-
-	return result
 
 
 def countTags(text, tagger, normalize=False):
@@ -62,7 +37,7 @@ def countTags(text, tagger, normalize=False):
 
 
 #function that loads the corpus and counts LIWC classes frequencies
-def loadPos(filenames, tags, normalize=False):
+def loadPos(filenames, tags, max_features = None, normalize = False, total_normalization = True):
 
 	result = {'labels': [], 'data': []}
 
@@ -81,7 +56,7 @@ def loadPos(filenames, tags, normalize=False):
 			#preprocesses the text read in f using prep()
 			#then counts the frequencies using the tagger
 			#returns a list with frequencies
-			freqs = countTags(prep(f.read(),useStopWords = False),tagger, normalize=False)
+			freqs = countTags(preprocessing.prep(f.read(),useStopWords = False),tagger, normalize=False)
 			#then appends the TrustWorthy tag in this list
 			freqs.append(tag)
 			#then appends this list into the data segment of the result dict

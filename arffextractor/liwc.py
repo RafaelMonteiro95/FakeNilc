@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from nltk.corpus import stopwords
-import nltk
-import re
-import string
+from arffextractor import preprocessing
 
 class LIWC:
 
@@ -83,26 +80,8 @@ class LIWC:
 
 		return wordFreqs
 
-def prep(s):
-
-	#preparation
-	cachedStopWords = stopwords.words('portuguese')
-	stemmer = nltk.stem.SnowballStemmer('portuguese')
-	translator = str.maketrans({key:None for key in string.punctuation});
-	
-	#removing ponctuation
-	result = s.translate(translator);
-
-	#removing numbers
-	result = re.sub('[0-9]', '' , s)
-
-	#removing stopwords
-	result = ' '.join([word.lower() for word in result.split() if word not in cachedStopWords])
-
-	return result
-
 #function that loads the corpus and counts LIWC classes frequencies
-def loadLiwc(filenames, tags, total_normalization = True):
+def loadLiwc(filenames, tags, max_features = None, normalize = False, total_normalization = True):
 	result = {'labels': [], 'data': []}
 
 	#loading LIWC
@@ -119,7 +98,7 @@ def loadLiwc(filenames, tags, total_normalization = True):
 		with open(filename, encoding='utf8') as f:
 
 			#calculates LIWC words frequencies in f, using prep to preprocess the text
-			freqs = liwc.calculateFreqs(prep(f.read()),total_normalization = total_normalization)
+			freqs = liwc.calculateFreqs(preprocessing.prep(f.read()),total_normalization = total_normalization)
 
 			freqs_list = [0]*len(labels)
 
