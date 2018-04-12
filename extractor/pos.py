@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from arffextractor import preprocessing
+from extractor import preprocessing
+import numpy as np
 
 #supress some warnings about type conversion
 import warnings
@@ -31,6 +32,8 @@ def countTags(text, tagger, normalize=False):
 	result = list(pos_tags.values())
 
 	for i in range(len(result)):
+		if(wordcount == 0):
+			exit(0)
 		result[i] /= wordcount
 
 	return result
@@ -42,12 +45,9 @@ def loadPos(filenames, tags, max_features = None, normalize = False, total_norma
 	result = {'labels': [], 'data': []}
 
 	#loading nlpnet	
-	tagger = POSTagger(r'utils\nlpnet', language='pt')
+	tagger = POSTagger(r'var/nlpnet', language='pt')
 
 	result['labels'] = list({'ADJ': 0, 'ADV': 0, 'ADV-KS': 0, 'ART': 0, 'CUR': 0, 'IN': 0, 'KC': 0, 'KS': 0, 'N': 0, 'NPROP': 0, 'NUM': 0, 'PCP': 0, 'PDEN': 0, 'PREP': 0, 'PROADJ': 0, 'PRO-KS': 0, 'PROPESS': 0, 'PROSUB': 0, 'V': 0, 'PU': 0}.keys())
-
-	result['labels'].append('Trustworthy')
-
 
 	# print(result['labels'])
 	#loading files
@@ -56,9 +56,12 @@ def loadPos(filenames, tags, max_features = None, normalize = False, total_norma
 			#preprocesses the text read in f using prep()
 			#then counts the frequencies using the tagger
 			#returns a list with frequencies
-			freqs = countTags(preprocessing.prep(f.read(),useStopWords = False),tagger, normalize=False)
-			#then appends the TrustWorthy tag in this list
-			freqs.append(tag)
+			try:
+				freqs = countTags(preprocessing.prep(f.read(), useStopWords = False, stem = False),tagger, normalize=False)
+			except:
+				print('Error processing POS with :',filename,flush=True)
+				continue
+
 			#then appends this list into the data segment of the result dict
 			result['data'].append(freqs)
 

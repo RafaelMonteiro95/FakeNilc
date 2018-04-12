@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from arffextractor import preprocessing
+from extractor import preprocessing
 
 class LIWC:
 
@@ -85,7 +85,7 @@ def loadLiwc(filenames, tags, max_features = None, normalize = False, total_norm
 	result = {'labels': [], 'data': []}
 
 	#loading LIWC
-	liwc = LIWC('utils/liwc.txt')
+	liwc = LIWC('var/liwc.txt')
 
 	#preparing result labels
 	labels = [liwc.classes[key] for key in liwc.classes]
@@ -97,8 +97,9 @@ def loadLiwc(filenames, tags, max_features = None, normalize = False, total_norm
 	for filename in filenames:
 		with open(filename, encoding='utf8') as f:
 
+
 			#calculates LIWC words frequencies in f, using prep to preprocess the text
-			freqs = liwc.calculateFreqs(preprocessing.prep(f.read()),total_normalization = total_normalization)
+			freqs = liwc.calculateFreqs(preprocessing.prep(f.read(), useStopWords = False, stem = False),total_normalization = total_normalization)
 
 			freqs_list = [0]*len(labels)
 
@@ -112,11 +113,5 @@ def loadLiwc(filenames, tags, max_features = None, normalize = False, total_norm
 				freqs_list[classIndex] = freqs[key]
 
 			result['data'].append(freqs_list)
-
-	#inserting labels (TRUE or FALSE) for each instance of the dataset
-	for tag,doc in zip(tags,result['data']):
-		doc.append(tag)
-
-	result['labels'].append('Trustworthy')
 
 	return result
