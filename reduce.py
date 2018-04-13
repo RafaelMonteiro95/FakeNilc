@@ -3,8 +3,11 @@ import os
 
 if __name__ == '__main__':
 	
+
+	##TODO: Parse these from CLI
 	news_dir = 'db'
 	output_dir = 'var/texts'
+	##END TODO
 
 	# creating dir for storing reduced texts
 	os.makedirs(output_dir, exist_ok=True)

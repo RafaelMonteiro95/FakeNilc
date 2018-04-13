@@ -26,10 +26,15 @@ if __name__ == '__main__':
 	news_dir = 'var/texts'
 	parameters = []
 	join = True
+	# join = False
 	###END TODO
 
-	parameters.append('Freq-Full')
+	# parameters.append('Freq-Full')
 	# parameters.append('Freq-2000')
+	parameters.append('Freq-5000')
+	# parameters.append('Freq-10000')
+	# parameters.append('Freq-15000')
+	# parameters.append('Freq-20000')
 	parameters.append('LIWC')
 	parameters.append('POS')
 	
