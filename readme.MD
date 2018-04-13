@@ -13,7 +13,8 @@ To use it, you must run `reduce.py`. This will balance the corpus texts lenght b
 
 ### feature extraction
 To use it, you must run `extract.py`. This will extract a set of features from the texts and save them in a .csv file. Then, it can join the .csv files generated for classification.
-####Parameters
+
+Parameters
 Edit these in the `extract.py` file
 `output_dir`: where generated result will be saved
 `output_csv`: where generated intermediary .csv files will be saved
