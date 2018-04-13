@@ -53,9 +53,7 @@ Currently, this program does not train classifiers automatically. To do so, use 
 2. Numpy
 3. Scikit-Learn (for Freq features)
 4. nlpnet (for POS features)
-
-  nlpnet requires h5py and scipy  
-  
+..nlpnet requires h5py and scipy.. 
 5. Pandas (for joining csv's) 
 
 ### etc
