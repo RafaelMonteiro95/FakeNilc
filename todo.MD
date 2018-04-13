@@ -1,11 +1,11 @@
 # TO DO
 
 ## General
-Parse arguments from command line
+Parse arguments from command line on `extract.py` and `reduce.py`
 
 ## Classification
+Create a `classify.py` script that will automatically train classifiers and assert their accuracy
 Integrate Scikit-learn or Weka in the scripts
-Automate the classification training step
 
 ## Perfomance
 Improve perfomance on feature extraction using parallel computing
