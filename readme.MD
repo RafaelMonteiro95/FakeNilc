@@ -49,13 +49,13 @@ Currently, this program does not train classifiers automatically. To do so, use 
 
 **Python Packages**
 
-1. NLTK (make run to run NLTK.download() and download its data)
+1. NLTK (make sure run to run NLTK.download() and download its data)
 2. Numpy
 3. Scikit-Learn (for Freq features)
 4. nlpnet (for POS features)
 
    nlpnet requires h5py and scipy
-     
+
 5. Pandas (for joining csv's) 
 
 ### etc
