@@ -4,20 +4,27 @@ A "Fake News" classifier developed in Python3.
 ## Usage
 
 There are three steps involved in running this program.
-i) preprocessing
-ii) feature extraction
-iii) classifier training
+1. preprocessing
+2. feature extraction
+3. classifier training
 
 ### Preprocessing
 To use it, you must run `reduce.py`. This will balance the corpus texts lenght by comparing the number of words of two given texts (one real, one fake).
 
-Edit the parameter `news_dir` with the path to the folder containing texts to be reduced and edit `output_dir` with the path were the reduced texts should be saved
+**Parameters:**
+
+edit these in the `reduce.py` file.
+
+`news_dir`: path to the folder containing texts to be reduced
+
+`output_dir`: path were the reduced texts should be saved
+
 
 ### feature extraction
 To use it, you must run `extract.py`. This will extract a set of features from the texts and save them in a .csv file. Then, it can join the .csv files generated for classification.
 
 
-Parameters:
+**Parameters:**
 
 Edit these in the `extract.py` file.
 
