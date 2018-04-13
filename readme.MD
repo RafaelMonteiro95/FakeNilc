@@ -20,6 +20,8 @@ edit these in the `reduce.py` file.
 `output_dir`: path were the reduced texts should be saved
 
 
+Please note that this step isn't required for the feature extraction, but it's recommended. 
+
 ### feature extraction
 To use it, you must run `extract.py`. This will extract a set of features from the texts and save them in a .csv file. Then, it can join the .csv files generated for classification.
 
@@ -40,3 +42,22 @@ Edit these in the `extract.py` file.
 
 ### Classifier Training
 Currently, this program does not train classifiers automatically. To do so, use your own scikit-learn script or run Weka.
+
+## Setup
+
+### Requirements
+
+**Python Packages**
+
+1. NLTK (make run to run NLTK.download() and download its data)
+2. Numpy
+3. Scikit-Learn (for Freq features)
+4. nlpnet (for POS features)
+  a. nlpnet requires h5py and scipy
+5. Pandas (for joining csv's) 
+
+### etc
+
+1. Download our database [Here](https://drive.google.com/open?id=171xE1ZsVpHQIbhPKdKcLsy4aA3r--bbq)
+2. Extract it to a folder
+3. Edit the parameters in the `.py` files with the correct parameters
