@@ -63,3 +63,8 @@ Currently, this program does not train classifiers automatically. To do so, use 
 1. Download our database [Here](https://drive.google.com/open?id=171xE1ZsVpHQIbhPKdKcLsy4aA3r--bbq)
 2. Extract it to a folder
 3. Edit the parameters in the `.py` files with the correct parameters
+
+
+## Contact
+
+Get in touch with me through [rafael.augusto.monteiro@usp.br] or [rafaelmonteiro95@gmail.com].
