@@ -144,7 +144,6 @@ if __name__ == '__main__':
 		if verb:
 			print('done',flush=True)
 
-
 		if verb:
 			print('Creating csv...',end='',flush=True)
 		# writes a csv for the extracted feature

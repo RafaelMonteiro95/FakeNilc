@@ -2,6 +2,7 @@
 
 ## General
 Parse arguments from command line on `reduce.py`
+Update verbosity system to use logs instead of prints 
 
 ## Classification
 change `classify.py` print results
