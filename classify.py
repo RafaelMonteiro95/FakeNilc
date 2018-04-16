@@ -6,12 +6,14 @@ from sklearn.metrics import confusion_matrix
 from sklearn.utils import shuffle
 from sklearn import svm
 
+def print_cm():
+	""
 
 if __name__ == '__main__':
 
 	arg_parser = argparse.ArgumentParser(description='A fake news classifier training system')
 	arg_parser.add_argument('dataset_filename', help='path to the file used as dataset')
-	arg_parser.add_argument('-tags_filename', help='path to the file with dataset instances labels (REAL or FAKE)')
+	arg_parser.add_argument('tags_filename', help='path to the file with dataset instances labels (REAL or FAKE)')
 	arg_parser.add_argument('-v','--verbose', help='output verbosity.', action='store_true')
 	args = arg_parser.parse_args()
 
@@ -49,8 +51,13 @@ if __name__ == '__main__':
 	classifier = svm.SVC(C=1, verbose=verbose)
 	predicted = cross_val_predict(classifier, X, y, cv=5, verbose=verbose, n_jobs=-1)
 
-
 	#result:
 	print(classification_report(y,predicted))
+	# cm = confusion_matrix(y,predicted,['Real','Fake'])
+	# print_cm(cm,labels)
 	tn, fp, fn, tp = confusion_matrix(y, predicted).ravel()
-	print('True Negative:',tn,'False Positive:',fp,'False Negative:',fn,'True Positive:',tp)
+
+	print('Confusion Matrix:')
+	print(' a      b     <--- Classified as')
+	print('{0:5d}  {1:5d}   a = REAL'.format(tp,fp))
+	print('{0:5d}  {1:5d}   b = FAKE'.format(fn,tn))
