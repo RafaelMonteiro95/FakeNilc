@@ -37,6 +37,7 @@ if __name__ == '__main__':
 				#read both files and reduce the lenght of the biggest
 				result = rc.reduce(real.read(),fake.read())
 
+				#saves result
 				with open(output_dir + 'real/' + real_name,'w', encoding='utf8') as f:
 					print(result[0],file=f)
 				with open(output_dir + 'fake/' + fake_name,'w', encoding='utf8') as f:
