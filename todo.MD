@@ -1,12 +1,10 @@
 # TO DO
 
 ## General
-Parse arguments from command line on `extract.py` and `reduce.py`
+Parse arguments from command line on `reduce.py`
 
 ## Classification
-Create a `classify.py` script that will automatically train classifiers and assert their accuracy.
-Use Scikit-learn or Weka on the scripts
+change `classify.py` print results
 
 ## Perfomance
-Improve perfomance on feature extraction using parallel computing
-Use CUDA on classifier training (maybe switch from Weka to TensorFlow?)
+Improve perfomance on feature extraction and text reduction using parallel computing
