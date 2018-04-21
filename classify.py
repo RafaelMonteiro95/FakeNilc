@@ -1,15 +1,15 @@
 import argparse
 import pandas as pd 
+import sys
 from sklearn.model_selection import cross_val_predict
 from sklearn.metrics import classification_report 
 from sklearn.metrics import confusion_matrix
 from sklearn.utils import shuffle
 from sklearn import svm
 
-def print_cm():
-	""
 
 if __name__ == '__main__':
+
 
 	arg_parser = argparse.ArgumentParser(description='A fake news classifier training system')
 	arg_parser.add_argument('dataset_filename', help='path to the file used as dataset')
@@ -23,7 +23,8 @@ if __name__ == '__main__':
 	dataset_filename = args.dataset_filename
 	tags_filename = args.tags_filename
 	verbose = args.verbose
-	if(args.verbose):
+	if(verbose):
+		print(sys.argv[1:])
 		print('verbosity turned on')
 	###
 

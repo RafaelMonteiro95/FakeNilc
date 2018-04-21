@@ -83,14 +83,17 @@ if __name__ == '__main__':
 		print('generating filenames list...',end='',flush=True)
 	# Fetching files from input
 	# From the true news folder
+	ids = []
 	filenames = []
 	tags = []
 
 	for filename in os.listdir(news_dir + '/real'):
+		ids.appends(filename.replace('.txt',''))
 		filenames.append(news_dir + '/real/' + filename)
 		tags.append('REAL')
 	# From the fake news folder
 	for filename in os.listdir(news_dir + '/fake'):
+		ids.appends(filename.replace('.txt',''))
 		filenames.append(news_dir + '/fake/' + filename)
 		tags.append('FAKE')
 
