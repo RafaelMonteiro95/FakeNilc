@@ -2,36 +2,21 @@ import os
 import sys
 import argparse
 from extractor import liwc, bow, arff, pos
+import numpy as np
 import pandas as pd
 
-def joincsv(filenames, output_filename):
-
-	# reading files
-	#dfs = dataframes
-	dfs = [pd.read_csv(filename) for filename in filenames]
-	#dfr = resulting dataframe
-	dfr = dfs[0]
-
-	# concatenating dataframes
-	for i in range(1,len(dfs)):
-		dfr = pd.concat([dfr,dfs[i]],axis=1)
-
-	# writting result
-	dfr.to_csv(output_filename, index=False)
+#TODO: use logging instead of printfs
 
 
-if __name__ == '__main__':
-
-	choices = ['Freq-Full','LIWC', 'POS', 'all']
+def parseArguments(choices):
 	parameters = []
 
 	#parsing command line arguments
 	arg_parser = argparse.ArgumentParser(description='A fake news classifier feature extraction system. Extracts selected features and saves it in one or multiple .csv files')
 	arg_parser.add_argument('texts_dir', help='path to the folder containing news used as dataset')
 	arg_parser.add_argument('output_location', help='path to the output location')
-	arg_parser.add_argument('parameters', help='features to be extracted. If All is selected, then all features will be extracted. Multiple options can be selected.', nargs='+', choices=choices)
+	arg_parser.add_argument('features', help='features to be extracted. If All is selected, then all features will be extracted. Multiple options can be selected.', nargs='+', choices=choices)
 	arg_parser.add_argument('-j','--join', help='if resulting csvs should be joined in one single file or not', action='store_true')
-	arg_parser.add_argument('-t','--tag', help='if resulting csvs should contain tags or not', action='store_true')
 	arg_parser.add_argument('-v','--verbose', help='output verbosity', action='store_true')
 	args = arg_parser.parse_args()
 
@@ -48,11 +33,11 @@ if __name__ == '__main__':
 		news_dir = args.texts_dir
 
 	#appending the selected parameters
-	if 'all' in [par.lower() for par in args.parameters]:
+	if 'all' in [par.lower() for par in args.features]:
 		parameters = choices
 		parameters.remove('all')
 	else:
-		for parameter in args.parameters:
+		for parameter in args.features:
 			parameters.append(parameter)
 
 	#verbosity
@@ -61,48 +46,35 @@ if __name__ == '__main__':
 	#if we have to join the csvs
 	join = args.join
 
-	#if we have to include tags on csvs
-	tagger = args.tag
+	return (output_csv, news_dir, parameters, verb, join)
 
 
-	if(verb):
-		print('Arguments',flush=True)
-		print('input dir:',news_dir,flush=True)
-		print('output dir:',output_csv,flush=True)
-		print('parameters:',parameters,flush=True)
-		print('join:',join,flush=True)
-
-	# exit(0)
-	# creating output dir
-	if(output_csv != ''):
-		os.makedirs(output_csv, exist_ok=True)
-
+def loadCorpus(news_dir):
 	# Loading corpus
-
-	if(verb):
-		print('generating filenames list...',end='',flush=True)
-	# Fetching files from input
-	# From the true news folder
 	ids = []
 	filenames = []
 	tags = []
 
 	for filename in os.listdir(news_dir + '/real'):
-		ids.appends(filename.replace('.txt',''))
+		ids.append(filename.replace('.txt','-REAL'))
 		filenames.append(news_dir + '/real/' + filename)
 		tags.append('REAL')
+
 	# From the fake news folder
 	for filename in os.listdir(news_dir + '/fake'):
-		ids.appends(filename.replace('.txt',''))
+		ids.append(filename.replace('.txt','-FAKE'))
 		filenames.append(news_dir + '/fake/' + filename)
 		tags.append('FAKE')
 
-	if(verb):
-		print('done',flush=True)
+	ids, filenames, tags = (list(t) for t in zip(*sorted(zip(ids, filenames, tags))))
+
+	ids = pd.DataFrame(ids,columns=['Id'])
+	tags = pd.DataFrame(tags,columns=['Tag'])
+
+	return (ids, filenames, tags)
 
 
-	if(verb):
-		print('generating parameters list...',end='',flush=True)
+def prepareCalls(parameters, filenames, tags):
 	#preparing features for extraction
 	calls = []
 	for feature in parameters:
@@ -125,54 +97,123 @@ if __name__ == '__main__':
 		else:
 			raise ValueError(feature + ' is not a valid feature')
 
-	if(verb):
-		print('done',flush=True)
+	return calls
 
+
+def extractFeatures(parameters, calls, output_csv, ids, tags, verb = True):
 	# Extracts each feature described in the calls list
 	for parameter,call in zip(parameters, calls):
+		
 		if verb:
 			print('Extracting', parameter, '...',end='',flush=True)
-		feature_filename = output_csv + parameter.lower()
-		
+
 		#if this feature was already extracted, dont need to extract it again
+		feature_filename = output_csv + parameter.lower()
 		if(os.path.isfile(feature_filename + '.csv')):
 			if verb:
 				print('csv already exists. next...',flush=True)
 			continue;
 
-		# generates a data dict by calling the correct feature method, with correct parameters
+
+		#calling the function
 		feature_method = call[0]
 		feature_parameters = call[1]
 		result = feature_method(*feature_parameters)
+
+		#appeding ids and tags to resulting dataframe
+		result_df = pd.concat([ids,result,tags],axis=1)
+		result_df = result_df.set_index('Id')
+
 		if verb:
 			print('done',flush=True)
 
 		if verb:
 			print('Creating csv...',end='',flush=True)
-		# writes a csv for the extracted feature
-		arff.createCSV(result['labels'], result['data'], relation=parameter, filename=feature_filename)
-		if verb:
-			print('done',end='',flush=True)
 
+		# writes a csv for the extracted feature
+		with open(feature_filename + '.csv', 'w', encoding='utf8',) as f:
+			result_df.to_csv(f)
+		if verb:
+			print('done',flush=True)
+
+	if verb:
+		print('Extraction Complete',flush=True)
+
+
+def joincsv(filenames, output_filename):
+	#resulting dataframe
+	dfr = pd.DataFrame()
+	#dataframe that stores the tags
+	tags = None
+	# reading files
+	for filename in filenames:
+		#loads csv into df
+		df = read_csv(filename,index_col=0)
+		#saves the tag column on the 1st csv
+		if tags == None:
+			tags = dfr.iloc[:,-1]
+		#removes the tag column
+		df = df.drop('Tag',axis=1)
+		#concatenate the new dataframe with resulting dataframe
+		dfr = pd.concat([dfr,df],axis=1)
+		
+	#concatenates the resulting dataframe with the tags dataframe
+	dfr = pd.concat([dfr,tags],axis=1)
+
+	return dfr
+
+
+def joinFeatures(parameters, output_csv):
+
+	#generating a list with .csv files to load dataframes
+	csv_filenames = [output_csv+parameter.lower()+'.csv' for parameter in parameters]
+	#creating the joined csv filename
+	output_filename = output_csv + '-'.join([parameter.lower() for parameter in parameters])
+	#joins all csv files into one dataframe
+	df = joincsv(csv_filenames)
+	#dumps dataframe
+	df.to_csv(output_filename)
+
+
+def main():
+
+	choices = ['Freq-Full','LIWC', 'POS', 'all']
+
+	output_csv, news_dir, parameters, verb, join = parseArguments(choices)
 
 	if(verb):
-		print('Creating tags csv...',end='',flush=True)
-	# Creating a csv with trustworthy tags
-	arff.createCSV(['Trustworthy'], tags, relation='Trustworthy', filename=output_csv + 'tags')
+		print(*sys.argv,sep = ' ')
+
+	# creating output dir
+	if(output_csv != ''):
+		os.makedirs(output_csv, exist_ok=True)
+
+	#loading corpus
+	if(verb):
+		print('generating filenames list...',end='',flush=True)
+	ids, filenames, tags = loadCorpus(news_dir)
 	if(verb):
 		print('done',flush=True)
 
+	#generating a list with calls to feature extraction methods and their parameters
+	if(verb):
+		print('generating parameters list...',end='',flush=True)
+	calls = prepareCalls(parameters, filenames, tags)
+	if(verb):
+		print('done',flush=True)
+
+	#extracts all features
+	extractFeatures(parameters, calls, output_csv, ids, tags, verb)
+
+	#joins the resulting csvs files into a single one.
 	if(join):
 		if verb:
 			print('Joining csv...')
-
-		csv_filenames = [output_csv+parameter.lower()+'.csv' for parameter in parameters]
-		output_filename = output_dir + '-'.join([parameter.lower() for parameter in parameters])
-		if(tagged):
-			csv_filenames.append(output_csv + 'tags.csv')
-			output_filename += '-tagged'
-
-		joincsv(csv_filenames, output_filename + ".csv")
-
+		joinFeatures(parameters, output_csv)
 		if verb:
-			print('Result saved to', output_dir + output_filename + ".csv", flush = True)
+			print('Done')
+
+
+if __name__ == '__main__':
+
+	main()

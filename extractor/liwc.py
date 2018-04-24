@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import numpy as np
+import pandas as pd
 from extractor import preprocessing
 
 class LIWC:
@@ -82,7 +84,7 @@ class LIWC:
 
 #function that loads the corpus and counts LIWC classes frequencies
 def loadLiwc(filenames, tags, max_features = None, normalize = False, total_normalization = True):
-	result = {'labels': [], 'data': []}
+	data = []
 
 	#loading LIWC
 	liwc = LIWC('var/liwc.txt')
@@ -90,13 +92,10 @@ def loadLiwc(filenames, tags, max_features = None, normalize = False, total_norm
 	#preparing result labels
 	labels = [liwc.classes[key] for key in liwc.classes]
 
-	result['labels'] = labels
-
 	count = 0
 	#processing corpus
 	for filename in filenames:
 		with open(filename, encoding='utf8') as f:
-
 
 			#calculates LIWC words frequencies in f, using prep to preprocess the text
 			freqs = liwc.calculateFreqs(preprocessing.prep(f.read(), useStopWords = False, stem = False),total_normalization = total_normalization)
@@ -112,6 +111,6 @@ def loadLiwc(filenames, tags, max_features = None, normalize = False, total_norm
 
 				freqs_list[classIndex] = freqs[key]
 
-			result['data'].append(freqs_list)
+			data.append(freqs_list)
 
-	return result
+	return pd.DataFrame(data,columns=labels)

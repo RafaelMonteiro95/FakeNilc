@@ -1,5 +1,6 @@
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from extractor import preprocessing
+import pandas as pd
 
 def loadCount(filenames, tags, max_features = None, normalize = False, total_normalization = True):
 
@@ -7,11 +8,11 @@ def loadCount(filenames, tags, max_features = None, normalize = False, total_nor
 	vectorizer = CountVectorizer(input = 'filename', preprocessor = preprocessing.prep, encoding='utf-8', max_features=max_features);
 
 	# matrix with words frequencies for each document
-	frequencies = vectorizer.fit_transform(filenames).todense().tolist();
-	words = vectorizer.get_feature_names()
+	data = vectorizer.fit_transform(filenames).todense();
+	labels = vectorizer.get_feature_names()
 
 	#returns a dictionary with data and labels
-	return {'labels':words, 'data':frequencies}
+	return pd.DataFrame(data,columns = labels)
 
 def loadTfidf(filenames, tags, max_features = None, normalize = False, total_normalization = True):
 
@@ -19,8 +20,8 @@ def loadTfidf(filenames, tags, max_features = None, normalize = False, total_nor
 	vectorizer = TfidfVectorizer(input = 'filename', preprocessor = preprocessing.prep, encoding='utf-8',max_features=max_features);
 
 	# matrix with words frequencies for each document
-	frequencies = vectorizer.fit_transform(filenames).todense().tolist();
-	words = vectorizer.get_feature_names()
+	data = vectorizer.fit_transform(filenames).todense();
+	labels = vectorizer.get_feature_names()
 
 	#returns a dictionary with data and labels
-	return {'labels':words, 'data':frequencies}
+	return pd.DataFrame(data,columns = labels)

@@ -29,10 +29,8 @@ def createCSV(attributes, data, relation, filename, tags = None):
 		if(relation == "Trustworthy"):
 			print(file=f)
 			for i in range(len(data)):
-				print(data[i],file=f)
-
+				print(*data[i],file=f)
 		else :
-
 			#printing last label or line end
 			if(tags != None):
 				print(',Trustworthy', file=f)
@@ -43,7 +41,7 @@ def createCSV(attributes, data, relation, filename, tags = None):
 			for i in range(len(data)):
 				#if im printing labeled data, prints the label in the end
 				if(tags != None):
-					print(','+tags[i],sep='', file=f)
+					print(*tags[i],sep=',', file=f)
 				#else, justs prints the data
 				else:
 					print(*data[i], sep=',', file=f)
