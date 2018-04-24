@@ -140,23 +140,22 @@ def extractFeatures(parameters, calls, output_csv, ids, tags, verb = True):
 		print('Extraction Complete',flush=True)
 
 
-def joincsv(filenames, output_filename):
+def joincsv(filenames):
 	#resulting dataframe
-	dfr = pd.DataFrame()
+	dfr = pd.read_csv(filenames[0],index_col=0)
 	#dataframe that stores the tags
-	tags = None
+	#saves the tag column on the 1st csv
+	tags = tags = dfr.iloc[:,-1]
+	dfr = dfr.drop('Tag',axis=1)
 	# reading files
-	for filename in filenames:
+	for i in range(1,len(filenames)):
 		#loads csv into df
-		df = read_csv(filename,index_col=0)
-		#saves the tag column on the 1st csv
-		if tags == None:
-			tags = dfr.iloc[:,-1]
+		df = pd.read_csv(filenames[i],index_col=0)
 		#removes the tag column
 		df = df.drop('Tag',axis=1)
 		#concatenate the new dataframe with resulting dataframe
 		dfr = pd.concat([dfr,df],axis=1)
-		
+
 	#concatenates the resulting dataframe with the tags dataframe
 	dfr = pd.concat([dfr,tags],axis=1)
 
@@ -172,7 +171,7 @@ def joinFeatures(parameters, output_csv):
 	#joins all csv files into one dataframe
 	df = joincsv(csv_filenames)
 	#dumps dataframe
-	df.to_csv(output_filename)
+	df.to_csv(output_filename + '.csv')
 
 
 def main():
@@ -208,10 +207,10 @@ def main():
 	#joins the resulting csvs files into a single one.
 	if(join):
 		if verb:
-			print('Joining csv...')
+			print('Joining csv...',end='',flush=True)
 		joinFeatures(parameters, output_csv)
 		if verb:
-			print('Done')
+			print('Done',flush=True)
 
 
 if __name__ == '__main__':
