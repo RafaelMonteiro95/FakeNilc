@@ -32,7 +32,7 @@ def printResults(real, predicts, f=sys.stdout):
 	v = len(real)
 	s = [int(v*0.2), int(v* 0.4), int(v*0.6), int(v*0.8), v]
 	accs = [100*accuracy_score(real[:s[i]], predicts[i]) for i in range(len(predicts))]
-	print('00.0000(0%) {0:.4f}(20%) {1:.4f}(40%) {2:.4f}(60%) {3:.4f}(80%) {4:.4f}(100%)'.format(*accs))
+	print('00.0000(0%) {0:.2f}(20%) {1:.2f}(40%) {2:.2f}(60%) {3:.2f}(80%) {4:.2f}(100%)'.format(*accs))
 
 	#printing classification report
 	print('Classification Report:')
