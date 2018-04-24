@@ -35,18 +35,13 @@ def printResults(real, predicted, f=sys.stdout):
 	print('{0:5d}  {1:5d}   b = FAKE'.format(fn,tn), file = f)
 
 
-def main():
-
-	dataset_filename, verbose = parseArguments()
-	
-	if(verbose):
-		print(sys.argv[1:])
-		print('verbosity turned on')
-
-	# loading dataset into a pandas dataframe
+def loadDataset(dataset_filename):
 	with open(dataset_filename, encoding='utf8') as features:
 		df = pd.read_csv(features,index_col=0)
+	return df
 
+
+def getDatasetValues(df):
 	# Getting the tags column and saving it into y
 	y = df.loc[:,'Tag'].tolist()
 	# Dropping the column with tags
@@ -57,6 +52,23 @@ def main():
 
 	#shuffling dataset
 	X, y = shuffle(X, y)
+
+	return (X, y)
+
+
+def main():
+
+	dataset_filename, verbose = parseArguments()
+	
+	if(verbose):
+		print(sys.argv[1:])
+		print('verbosity turned on')
+
+	# loading dataset into a pandas dataframe
+	df = loadDataset(dataset_filename)
+
+	# getting data and labels from dataframe
+	X, y = getDatasetValues(df)
 
 	#preparing classifier
 	classifier = LinearSVC(C=1.0,verbose=verbose)
