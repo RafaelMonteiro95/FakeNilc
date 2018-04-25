@@ -157,5 +157,7 @@ def main():
 		#no need to keep this classifier up
 		del clf 
 
+	print('Done.')
+
 if __name__ == '__main__':
 	main()
