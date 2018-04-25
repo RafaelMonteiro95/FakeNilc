@@ -5,7 +5,7 @@ import pandas as pd
 def loadCount(filenames, tags, max_features = None, normalize = False, total_normalization = True):
 
 	# Creating bag of words
-	vectorizer = CountVectorizer(input = 'filename', preprocessor = preprocessing.prep, encoding='utf-8', max_features=max_features);
+	vectorizer = CountVectorizer(input = 'filename', preprocessor = preprocessing.prep, encoding='utf-8', max_features=max_features, min_df=3);
 
 	# matrix with words frequencies for each document
 	data = vectorizer.fit_transform(filenames).todense();
