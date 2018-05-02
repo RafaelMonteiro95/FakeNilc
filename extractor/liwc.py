@@ -45,7 +45,7 @@ class LIWC:
 				#creating a new dictionary that stores all classes that a word belongs
 				self.words[split[0]] = split[1:]
 
-	def calculateFreqs(self, text, normalized = True, total_normalization = False):
+	def calculateFreqs(self, text, normalized = False, total_normalization = False):
 		discarted_words = []
 		wordFreqs = {}
 

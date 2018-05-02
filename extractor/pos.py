@@ -34,8 +34,9 @@ def countTags(text, tagger, normalize=False):
 
 	for i in range(len(result)):
 		if(wordcount == 0):
-			exit(0)
-		result[i] /= wordcount
+			raise ValueError('Text didnt contain any words')
+		if normalize:
+			result[i] /= wordcount
 
 	return result
 
@@ -57,11 +58,10 @@ def loadPos(filenames, tags, max_features = None, normalize = False, total_norma
 			#then counts the frequencies using the tagger
 			#returns a list with frequencies
 			try:
-				freqs = countTags(preprocessing.prep(f.read(), useStopWords = False, stem = False),tagger, normalize=False)
+				freqs = countTags(f.read(),tagger, normalize=False)
 			except:
 				print('Error processing POS with :',filename,flush=True)
 				continue
-
 			#then appends this list into the data segment of the result dict
 			data.append(freqs)
 

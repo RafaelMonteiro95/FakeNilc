@@ -1,7 +1,7 @@
 import argparse
 import pandas as pd 
 import sys
-from sklearn.model_selection import cross_val_predict
+from sklearn.model_selection import cross_val_predict, train_test_split
 from sklearn.metrics import classification_report , confusion_matrix, accuracy_score
 from sklearn.utils import shuffle
 from sklearn.svm import SVC, LinearSVC
@@ -15,7 +15,6 @@ from sklearn.neural_network import MLPClassifier
 def parseArguments():
 
 	choices = ['svc','linearsvc','naive_bayes','randomforest', 'all']
-
 
 	arg_parser = argparse.ArgumentParser(description='A fake news classifier training system')
 	arg_parser.add_argument('dataset_filename', help='path to the file used as dataset')
@@ -41,13 +40,14 @@ def parseArguments():
 	if args.output != None:
 		output = open(args.output,'w')
 	else:
-		n_jobs = sys.stdout
+		output = sys.stdout
 
 	#classifiers used. if 'all' or None, uses all classifiers
-	classifier = [LinearSVC(C=1.0),
+	classifier = [LinearSVC(),
 					  MultinomialNB(),
 					  RandomForestClassifier(),
-					  MLPClassifier()]
+					  MLPClassifier()
+					  ]
 	if args.classifier == 'linearsvc':
 		classifier = [classifier[0]]
 	elif args.classifier == 'naive_bayes':
@@ -82,6 +82,26 @@ def getDatasetValues(df):
 
 	return (X, y)
 
+# Pausality,Emotivity,Uncertainty,Immediatism
+
+def getMetrics(df):
+	# Getting the tags column and saving it into y
+	y = df.loc[:,'Tag'].tolist()
+	# Dropping the column with tags
+	df = df.drop('Tag',axis=1)
+	df = df.drop('Pausality',axis=1)
+	df = df.drop('Emotivity',axis=1)
+	df = df.drop('Uncertainty',axis=1)
+
+	print(df.head())
+
+	# X contain a matrix with dataframe values, y contains a 
+	X = df.values
+
+	#shuffling dataset
+	X, y = shuffle(X, y)
+
+	return (X, y)
 
 def predictAndEvaluate(classifier, X, y, n_jobs = 2, verbose = False):
 
@@ -100,7 +120,7 @@ def predictAndEvaluate(classifier, X, y, n_jobs = 2, verbose = False):
 	return predicts
 
 
-def printResults(real, predicts, f=sys.stdout):
+def printResults(real, predicts, f = sys.stdout):
 	print('\nLearning curve values:', file = f)
 	#printing learning curve
 	v = len(real)
@@ -135,29 +155,43 @@ def main():
 	# getting data and labels from dataframe
 	# X = data, y = labels
 	X, y = getDatasetValues(df)
+	# X, y = getMetrics(df)
 
+	# X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=200)
+
+	saved_predicts = None
+	print('Dataset:',dataset_filename, file=output)
 	for clf in classifier:
 		#trains the classifier using 5-fold cv and generates an array with results
 		#predicts contains the cross validation result for 5 percentiles of the dataset used:
 		#20%, 40%, 60%, 80% and 100%
-		predicts = predictAndEvaluate(clf, X, y, n_jobs, verbose)
-
 		if verbose:
 			print('Training ', clf.__class__.__name__, flush=True)
+		predicts = predictAndEvaluate(clf, X, y, n_jobs, verbose)
+
 
 		if verbose:
 			print('Saving results for', clf.__class__.__name__, flush=True)
 
 		print('Classifier:', clf.__class__.__name__, file = output)
-		#printing the result
+		# printing the result
 		printResults(y, predicts, f = output)
 		print('====== ====== ======', file=output)
 		print('      =      =      ', file=output)
 		print('====== ====== ======', file=output)
-		#no need to keep this classifier up
+		#no need to keep this classifier u
+		# with open('missed.txt','w') as f:
+			# for real, predict, i in zip(y, predicts[0], range(len(y))):
+				# print(real, predict, real == predict)
+				# break;
+				# if real != predict :
+					# break;
+					# print(df.iloc[i].name, 'Was', real, 'classified as', predict, file = f)
 		del clf 
 
 	print('Done.')
+
+	# print(ids[:5])
 
 if __name__ == '__main__':
 	main()

@@ -2,10 +2,10 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from extractor import preprocessing
 import pandas as pd
 
-def loadCount(filenames, tags, max_features = None, normalize = False, total_normalization = True):
+def loadCount(filenames, tags, max_features = None, normalize = False, total_normalization = True, min_df = 1):
 
 	# Creating bag of words
-	vectorizer = CountVectorizer(input = 'filename', preprocessor = preprocessing.prep, encoding='utf-8', max_features=max_features, min_df=3);
+	vectorizer = CountVectorizer(input = 'filename', preprocessor = preprocessing.prep, encoding='utf-8', max_features=max_features, min_df=min_df);
 
 	# matrix with words frequencies for each document
 	data = vectorizer.fit_transform(filenames).todense();

@@ -1,7 +1,7 @@
 import os
 import sys
 import argparse
-from extractor import liwc, bow, arff, pos
+from extractor import liwc, bow, arff, pos, metrics
 import numpy as np
 import pandas as pd
 
@@ -85,9 +85,12 @@ def prepareCalls(parameters, filenames, tags):
 		elif feature.lower() == 'liwc':
 			calls.append((liwc.loadLiwc,[filenames, tags, None, None, False]))
 		#extracts coh-metrix features
-		elif feature.lower() == 'coh-metrix':
-			#TODO
-			raise NotImplementedError('coh-metrix')
+		elif feature.lower() == 'metrics':
+			calls.append((metrics.loadMetrics,[filenames, tags, None, None, False]))
+		elif feature.lower() == 'freq-df3':
+			calls.append((bow.loadCount,[filenames, tags, None, None, False, 3]))
+		elif feature.lower() == 'uncertainty':
+			calls.append((None,None))
 		#extracts bag of words representation
 		elif feature.lower().split('-')[0] == 'freq':
 			if(feature.lower().split('-')[1].lower() == 'full'):
@@ -176,7 +179,7 @@ def joinFeatures(parameters, output_csv):
 
 def main():
 
-	choices = ['Freq-Full','LIWC', 'POS', 'all']
+	choices = ['Freq-Full','Freq-df3','LIWC', 'POS', 'Metrics', 'Uncertainty','all']
 
 	output_csv, news_dir, parameters, verb, join = parseArguments(choices)
 
