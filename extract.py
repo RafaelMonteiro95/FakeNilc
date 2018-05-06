@@ -73,6 +73,78 @@ def loadCorpus(news_dir):
 
 	return (ids, filenames, tags)
 
+def getNonImmediacy(filenames):
+	with open('metrics.csv', encoding='utf8') as features:
+		df = pd.read_csv(features,index_col=0)
+
+	print(df.head())
+
+	#Pausality,Emotivity,nonImediacy,Uncertainty
+	# Dropping the column with tags
+	df = df.reset_index()
+	df = df.drop('Id',axis=1)
+	df = df.drop('Tag',axis=1)
+	df = df.drop('Pausality',axis=1)
+	df = df.drop('Emotivity',axis=1)
+	# df = df.drop('nonImediacy',axis=1)
+	df = df.drop('Uncertainty',axis=1)
+
+	return df
+
+def getPausality(filenames):
+	with open('metrics.csv', encoding='utf8') as features:
+		df = pd.read_csv(features,index_col=0)
+
+	print(df.head())
+
+	#Pausality,Emotivity,nonImediacy,Uncertainty
+	# Dropping the column with tags
+	df = df.reset_index()
+	df = df.drop('Id',axis=1)
+	df = df.drop('Tag',axis=1)
+	# df = df.drop('Pausality',axis=1)
+	df = df.drop('Emotivity',axis=1)
+	df = df.drop('nonImediacy',axis=1)
+	df = df.drop('Uncertainty',axis=1)
+
+	return df
+
+def getEmotivity(filenames):
+	with open('metrics.csv', encoding='utf8') as features:
+		df = pd.read_csv(features,index_col=0)
+
+	print(df.head())
+
+	#Pausality,Emotivity,nonImediacy,Uncertainty
+	# Dropping the column with tags
+	df = df.reset_index()
+	df = df.drop('Id',axis=1)
+	df = df.drop('Tag',axis=1)
+	df = df.drop('Pausality',axis=1)
+	# df = df.drop('Emotivity',axis=1)
+	df = df.drop('nonImediacy',axis=1)
+	df = df.drop('Uncertainty',axis=1)
+
+	return df
+
+def getUncertainty(filenames):
+	with open('metrics.csv', encoding='utf8') as features:
+		df = pd.read_csv(features,index_col=0)
+
+	print(df.head())
+
+	#Pausality,Emotivity,nonImediacy,Uncertainty
+	# Dropping the column with tags
+	df = df.reset_index()
+	df = df.drop('Id',axis=1)
+	df = df.drop('Tag',axis=1)
+	df = df.drop('Pausality',axis=1)
+	df = df.drop('Emotivity',axis=1)
+	df = df.drop('nonImediacy',axis=1)
+	# df = df.drop('Uncertainty',axis=1)
+
+	return df
+
 
 def prepareCalls(parameters, filenames, tags):
 	#preparing features for extraction
@@ -80,23 +152,40 @@ def prepareCalls(parameters, filenames, tags):
 	for feature in parameters:
 		#extracts POS
 		if feature.lower() == 'pos':
-			calls.append((pos.loadPos,[filenames, tags, None, False, None]))
+			#loadPos(filenames):
+			calls.append((pos.loadPos,[filenames]))
 		#extracts LIWC tags
 		elif feature.lower() == 'liwc':
-			calls.append((liwc.loadLiwc,[filenames, tags, None, None, False]))
-		#extracts coh-metrix features
+			# loadLiwc(filenames):
+			calls.append((liwc.loadLiwc,[filenames]))
+		#extracts metrics features
 		elif feature.lower() == 'metrics':
-			calls.append((metrics.loadMetrics,[filenames, tags, None, None, False]))
-		elif feature.lower() == 'freq-df3':
-			calls.append((bow.loadCount,[filenames, tags, None, None, False, 3]))
+			# loadMetrics(filenames):
+			calls.append((metrics.loadMetrics,[filenames]))
+		#extracts unigrams
+		elif feature.lower() == 'unigram-mf3':
+			# loadCount(filenames, min_freq = 1, binary = False, normalize = True)
+			calls.append((bow.loadCount,[filenames,3]))
+		elif feature.lower() == 'unigram':
+			# loadCount(filenames, min_freq = 1, binary = False, normalize = True)
+			calls.append((bow.loadCount,[filenames]))
+		elif feature.lower() == 'unigram-binary':
+			# loadCount(filenames, min_freq = 1, binary = False, normalize = True)
+			calls.append((bow.loadCount,[filenames,1, True, False]))
+		elif feature.lower() == 'unigram-binary-mf3':
+			# loadCount(filenames, min_freq = 1, binary = False, normalize = True)
+			calls.append((bow.loadCount,[filenames, 3, True, False]))
+		elif feature.lower() == 'unigram-binary-mf3-normalized':
+			# loadCount(filenames, min_freq = 1, binary = False, normalize = True)
+			calls.append((bow.loadCount,[filenames, 3, True, True]))
 		elif feature.lower() == 'uncertainty':
-			calls.append((None,None))
-		#extracts bag of words representation
-		elif feature.lower().split('-')[0] == 'freq':
-			if(feature.lower().split('-')[1].lower() == 'full'):
-				calls.append((bow.loadCount,[filenames, tags, None, None, None]))
-			else:
-				calls.append((bow.loadCount,[filenames, tags, int(feature.lower().split('-')[1].lower()), None, None]))
+			calls.append((getUncertainty,[filenames]))
+		elif feature.lower() == 'pausality':
+			calls.append((getPausality,[filenames]))
+		elif feature.lower() == 'nonimmediacy':
+			calls.append((getNonImmediacy,[filenames]))
+		elif feature.lower() == 'emotivity':
+			calls.append((getEmotivity,[filenames]))
 		else:
 			raise ValueError(feature + ' is not a valid feature')
 
@@ -179,7 +268,7 @@ def joinFeatures(parameters, output_csv):
 
 def main():
 
-	choices = ['Freq-Full','Freq-df3','LIWC', 'POS', 'Metrics', 'Uncertainty','all']
+	choices = ['unigram-mf3','unigram-binary','unigram-binary-mf3','unigram-binary-mf3-normalized','unigram','liwc','pos','metrics','pausality','uncertainty','emotivity','nonimmediacy','all']
 
 	output_csv, news_dir, parameters, verb, join = parseArguments(choices)
 

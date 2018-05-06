@@ -45,7 +45,7 @@ class LIWC:
 				#creating a new dictionary that stores all classes that a word belongs
 				self.words[split[0]] = split[1:]
 
-	def calculateFreqs(self, text, normalized = False, total_normalization = False):
+	def calculateFreqs(self, text, normalized = True, total_normalization = False):
 		discarted_words = []
 		wordFreqs = {}
 
@@ -64,7 +64,7 @@ class LIWC:
 				#get all LIWC categories that text_word belongs to
 				for category in self.words[text_word]:
 
-					#if we have to normalize with total words
+					#if we have to normalize with total number of words
 					if(normalized and (not total_normalization)):
 						wordFreqs[category] += 1.0/len(word_list)
 					else:
@@ -83,7 +83,7 @@ class LIWC:
 		return wordFreqs
 
 #function that loads the corpus and counts LIWC classes frequencies
-def loadLiwc(filenames, tags, max_features = None, normalize = False, total_normalization = True):
+def loadLiwc(filenames):
 	data = []
 
 	#loading LIWC
@@ -98,7 +98,7 @@ def loadLiwc(filenames, tags, max_features = None, normalize = False, total_norm
 		with open(filename, encoding='utf8') as f:
 
 			#calculates LIWC words frequencies in f, using prep to preprocess the text
-			freqs = liwc.calculateFreqs(preprocessing.prep(f.read(), useStopWords = False, stem = False),total_normalization = total_normalization)
+			freqs = liwc.calculateFreqs(preprocessing.prep(f.read(), useStopWords = False, stem = False),total_normalization = True)
 
 			freqs_list = [0]*len(labels)
 

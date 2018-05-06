@@ -11,7 +11,7 @@ with warnings.catch_warnings():
 	from nlpnet import POSTagger
 
 
-def countTags(text, tagger, normalize=False):
+def countTags(text, tagger, normalize=True):
 
 	wordcount = 0
 
@@ -20,9 +20,14 @@ def countTags(text, tagger, normalize=False):
 
 	#counting frequencies
 	#for each resulting tuple from the tagging method
-	for res in tagger.tag(text):
+	tagged_text = tagger.tag(text)
+	# print(tagged_text)
+	for res in tagged_text:
+
+		#counting number of tagged words in text
+		wordcount += len(res)
+
 		for word_result in res:
-			wordcount += 1
 			#sometimes one word gets more than one tag. Splitting it into two or more tags
 			split_result = word_result[1].replace('+',' ').split()
 
@@ -30,19 +35,22 @@ def countTags(text, tagger, normalize=False):
 			for tag in split_result:
 				pos_tags[tag] += 1
 
-	result = list(pos_tags.values())
+	#saving the tags count to a Numpy array
+	# result = np.array(pos_tags)
+	result = np.array(list(pos_tags.values()))
+	# print(wordcount)
+	if(normalize):
+		result = result / wordcount
 
-	for i in range(len(result)):
-		if(wordcount == 0):
-			raise ValueError('Text didnt contain any words')
-		if normalize:
-			result[i] /= wordcount
+	# for tag,value in zip(pos_tags,result):
+	# 	print("'{0}': {1:.2}".format(tag,value), end = ', ')
+	# print()
 
 	return result
 
 
 #function that loads the corpus and counts LIWC classes frequencies
-def loadPos(filenames, tags, max_features = None, normalize = False, total_normalization = True):
+def loadPos(filenames):
 
 	data = []
 
@@ -57,11 +65,11 @@ def loadPos(filenames, tags, max_features = None, normalize = False, total_norma
 			#preprocesses the text read in f using prep()
 			#then counts the frequencies using the tagger
 			#returns a list with frequencies
-			try:
-				freqs = countTags(f.read(),tagger, normalize=False)
-			except:
-				print('Error processing POS with :',filename,flush=True)
-				continue
+			# try:
+			freqs = countTags(f.read(),tagger)
+			# except:
+			# 	print('Error processing POS with :',filename,flush=True)
+			# 	continue
 			#then appends this list into the data segment of the result dict
 			data.append(freqs)
 
