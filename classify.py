@@ -76,10 +76,13 @@ def getDatasetValues(df):
 	# X contain a matrix with dataframe values, y contains a 
 	X = df.values
 
-	#shuffling dataset
-	X, y = shuffle(X, y)
+	# Id Contain Indexes
+	Id = df.index.values
 
-	return (X, y)
+	#shuffling dataset
+	X, y, Id = shuffle(X, y, Id)
+
+	return (X, y, Id)
 
 
 def predictAndEvaluate(classifier, X, y, lc = 5,  n_jobs = 2, verbose = False):
@@ -144,8 +147,9 @@ def main():
 
 		#split the dataframe in X(data) and y(labels)
 		logger.info('Splitting labels and data...')
-		X, y = getDatasetValues(df)
+		X, y, Ids = getDatasetValues(df)
 
+		predicts = []
 		#trains and evaluate each classifier described in classifiers
 		for clf in classifiers:
 
@@ -162,6 +166,9 @@ def main():
 			#After evaluating, deletes the used classifier
 			del clf
 		print('==============',file=output)
+
+		missed = [Ids[i] + ' Classified as ' + predicts[-1][i] + '\n' for i in range(len(y)) if predicts[-1][i] != y[i] ]
+		print(*missed, file = output)
 
 	logger.info('Done')
 
