@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from extractor import preprocessing
 import pandas as pd
 import numpy as np
 
@@ -65,11 +64,7 @@ def loadPos(filenames):
 			#preprocesses the text read in f using prep()
 			#then counts the frequencies using the tagger
 			#returns a list with frequencies
-			# try:
 			freqs = countTags(f.read(),tagger)
-			# except:
-			# 	print('Error processing POS with :',filename,flush=True)
-			# 	continue
 			#then appends this list into the data segment of the result dict
 			data.append(freqs)
 

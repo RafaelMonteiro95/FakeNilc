@@ -2,7 +2,7 @@
 
 import numpy as np
 import pandas as pd
-from extractor import preprocessing
+from preprocess import utils
 
 class LIWC:
 
@@ -89,6 +89,9 @@ def loadLiwc(filenames):
 	#loading LIWC
 	liwc = LIWC('var/liwc.txt')
 
+	#loading preprocessor
+	p = utils.preprocessor()
+
 	#preparing result labels
 	labels = [liwc.classes[key] for key in liwc.classes]
 
@@ -98,7 +101,7 @@ def loadLiwc(filenames):
 		with open(filename, encoding='utf8') as f:
 
 			#calculates LIWC words frequencies in f, using prep to preprocess the text
-			freqs = liwc.calculateFreqs(preprocessing.prep(f.read(), useStopWords = False, stem = False),total_normalization = True)
+			freqs = liwc.calculateFreqs(p.prep(f.read(), useStopWords = False, stem = False), total_normalization = True)
 
 			freqs_list = [0]*len(labels)
 

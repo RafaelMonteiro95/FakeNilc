@@ -1,20 +1,16 @@
 # -*- coding: utf-8 -*-
 
-from extractor import preprocessing
+from preprocess import utils
 import pandas as pd
 import numpy as np
 import string
 import re
 
-#supress some warnings about type conversion
+#supress some warnings about type conversion from nlpnet
 import warnings
 with warnings.catch_warnings():
 	warnings.filterwarnings("ignore",category=FutureWarning)
 	from nlpnet import POSTagger
-
-#
-#pd.concat([df1, df2.drop('id',axis=1)],axis=1,join='inner').set_index('id')
-
 
 def loadMetricsCSV(csv_filenames):
 
@@ -22,11 +18,9 @@ def loadMetricsCSV(csv_filenames):
 	fakes = pd.read_csv(csv_filenames[0], delimiter = ',', converters={'id':str})
 	reals = pd.read_csv(csv_filenames[1], delimiter = ',', converters={'id':str})
 
-
 	#changing id format
 	fakes.id += '-FAKE'
 	reals.id += '-REAL'
-
 
 	# #appending tags
 	fakes['Tag'] = ['FAKE' for i in range(fakes.shape[0])]
@@ -40,6 +34,7 @@ def loadMetricsCSV(csv_filenames):
 	df = pd.concat([fakes,reals]).sort_index().rename({'qtd_modals/qtd_verbs':'Uncertainty','(qtd_ind_reference+qtd_group_reference)/qtd_pronouns':'nonImediacy'},axis='columns')
 	df = df.reset_index()
 
+	#returns the resulting dataframe without the tag column
 	return df.drop('Tag',axis=1)
 
 
@@ -75,6 +70,78 @@ def countTags(text, tagger):
 	return result
 
 
+def getNonImmediacy(filenames):
+	with open('metrics.csv', encoding='utf8') as features:
+		df = pd.read_csv(features,index_col=0)
+
+	print(df.head())
+
+	#Pausality,Emotivity,nonImediacy,Uncertainty
+	# Dropping the column with tags
+	df = df.reset_index()
+	df = df.drop('Id',axis=1)
+	df = df.drop('Tag',axis=1)
+	df = df.drop('Pausality',axis=1)
+	df = df.drop('Emotivity',axis=1)
+	# df = df.drop('nonImediacy',axis=1)
+	df = df.drop('Uncertainty',axis=1)
+
+	return df
+
+
+def getPausality(filenames):
+	with open('metrics.csv', encoding='utf8') as features:
+		df = pd.read_csv(features,index_col=0)
+
+	print(df.head())
+
+	#Pausality,Emotivity,nonImediacy,Uncertainty
+	# Dropping the column with tags
+	df = df.reset_index()
+	df = df.drop('Id',axis=1)
+	df = df.drop('Tag',axis=1)
+	# df = df.drop('Pausality',axis=1)
+	df = df.drop('Emotivity',axis=1)
+	df = df.drop('nonImediacy',axis=1)
+	df = df.drop('Uncertainty',axis=1)
+
+	return df
+
+
+def getEmotivity(filenames):
+	with open('metrics.csv', encoding='utf8') as features:
+		df = pd.read_csv(features,index_col=0)
+
+	#Pausality,Emotivity,nonImediacy,Uncertainty
+	# Dropping the column with tags
+	df = df.reset_index()
+	df = df.drop('Id',axis=1)
+	df = df.drop('Tag',axis=1)
+	df = df.drop('Pausality',axis=1)
+	# df = df.drop('Emotivity',axis=1)
+	df = df.drop('nonImediacy',axis=1)
+	df = df.drop('Uncertainty',axis=1)
+
+	return df
+
+
+def getUncertainty(filenames):
+	with open('metrics.csv', encoding='utf8') as features:
+		df = pd.read_csv(features,index_col=0)
+
+	#Pausality,Emotivity,nonImediacy,Uncertainty
+	# Dropping the column with tags
+	df = df.reset_index()
+	df = df.drop('Id',axis=1)
+	df = df.drop('Tag',axis=1)
+	df = df.drop('Pausality',axis=1)
+	df = df.drop('Emotivity',axis=1)
+	df = df.drop('nonImediacy',axis=1)
+	# df = df.drop('Uncertainty',axis=1)
+
+	return df
+
+
 #function that loads the corpus and counts LIWC classes frequencies
 def loadMetrics(filenames):
 
@@ -89,20 +156,17 @@ def loadMetrics(filenames):
 	#loading files
 	for filename in filenames:
 		with open(filename, encoding='utf8') as f:
-			#preprocesses the text read in f using prep()
-			#then counts the frequencies using the tagger
-			#returns a list with frequencies
-			# try:
-			freqs = countTags(f.read(),tagger)
-			# except:
-				# print('Error processing POS with :',filename,flush=True)
-				# continue 
 
-			#then appends this list into the data segment of the result dict
+			# calculates all frequencies
+			freqs = countTags(f.read(),tagger)
+			# inserts them into data matrix
 			data.append(freqs)
 
+	# turns data matrix into a dataframe
 	df = pd.DataFrame(data,columns=labels)
+	# loads features that i already have saved in .csv files
 	df_extra_features = loadMetricsCSV(['fakes.csv','reals.csv'])
+	# concatenates the two dataframes: the one with features i've extracted, and the one with features i got from the .csv files
 	df = pd.concat([df,df_extra_features],axis=1).drop('Id',axis=1)
 	
 	return df

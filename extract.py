@@ -1,23 +1,23 @@
 import os
 import sys
 import argparse
-from extractor import liwc, bow, arff, pos, metrics
+import logging
+from preprocess import liwc, bow, pos, metrics
 import numpy as np
 import pandas as pd
-
-#TODO: use logging instead of printfs
 
 
 def parseArguments(choices):
 	parameters = []
 
 	#parsing command line arguments
-	arg_parser = argparse.ArgumentParser(description='A fake news classifier feature extraction system. Extracts selected features and saves it in one or multiple .csv files')
+	arg_parser = argparse.ArgumentParser(description='A text feature extraction system. Extracts selected features and saves it in one or multiple .csv files')
 	arg_parser.add_argument('texts_dir', help='path to the folder containing news used as dataset')
-	arg_parser.add_argument('output_location', help='path to the output location')
 	arg_parser.add_argument('features', help='features to be extracted. If All is selected, then all features will be extracted. Multiple options can be selected.', nargs='+', choices=choices)
+	arg_parser.add_argument('-o', '--output_location', help='path to the output location', default='.')
 	arg_parser.add_argument('-j','--join', help='if resulting csvs should be joined in one single file or not', action='store_true')
-	arg_parser.add_argument('-v','--verbose', help='output verbosity', action='store_true')
+	arg_parser.add_argument('-v','--verbose', help='output all steps happening', action='store_true')
+	arg_parser.add_argument('-d','--debug', help='output debug messages', action='store_true')
 	args = arg_parser.parse_args()
 
 	#checking for output location
@@ -42,6 +42,9 @@ def parseArguments(choices):
 
 	#verbosity
 	verb = args.verbose
+
+	#debugging output
+	debug = args.debug
 
 	#if we have to join the csvs
 	join = args.join
@@ -72,78 +75,6 @@ def loadCorpus(news_dir):
 	tags = pd.DataFrame(tags,columns=['Tag'])
 
 	return (ids, filenames, tags)
-
-def getNonImmediacy(filenames):
-	with open('metrics.csv', encoding='utf8') as features:
-		df = pd.read_csv(features,index_col=0)
-
-	print(df.head())
-
-	#Pausality,Emotivity,nonImediacy,Uncertainty
-	# Dropping the column with tags
-	df = df.reset_index()
-	df = df.drop('Id',axis=1)
-	df = df.drop('Tag',axis=1)
-	df = df.drop('Pausality',axis=1)
-	df = df.drop('Emotivity',axis=1)
-	# df = df.drop('nonImediacy',axis=1)
-	df = df.drop('Uncertainty',axis=1)
-
-	return df
-
-def getPausality(filenames):
-	with open('metrics.csv', encoding='utf8') as features:
-		df = pd.read_csv(features,index_col=0)
-
-	print(df.head())
-
-	#Pausality,Emotivity,nonImediacy,Uncertainty
-	# Dropping the column with tags
-	df = df.reset_index()
-	df = df.drop('Id',axis=1)
-	df = df.drop('Tag',axis=1)
-	# df = df.drop('Pausality',axis=1)
-	df = df.drop('Emotivity',axis=1)
-	df = df.drop('nonImediacy',axis=1)
-	df = df.drop('Uncertainty',axis=1)
-
-	return df
-
-def getEmotivity(filenames):
-	with open('metrics.csv', encoding='utf8') as features:
-		df = pd.read_csv(features,index_col=0)
-
-	print(df.head())
-
-	#Pausality,Emotivity,nonImediacy,Uncertainty
-	# Dropping the column with tags
-	df = df.reset_index()
-	df = df.drop('Id',axis=1)
-	df = df.drop('Tag',axis=1)
-	df = df.drop('Pausality',axis=1)
-	# df = df.drop('Emotivity',axis=1)
-	df = df.drop('nonImediacy',axis=1)
-	df = df.drop('Uncertainty',axis=1)
-
-	return df
-
-def getUncertainty(filenames):
-	with open('metrics.csv', encoding='utf8') as features:
-		df = pd.read_csv(features,index_col=0)
-
-	print(df.head())
-
-	#Pausality,Emotivity,nonImediacy,Uncertainty
-	# Dropping the column with tags
-	df = df.reset_index()
-	df = df.drop('Id',axis=1)
-	df = df.drop('Tag',axis=1)
-	df = df.drop('Pausality',axis=1)
-	df = df.drop('Emotivity',axis=1)
-	df = df.drop('nonImediacy',axis=1)
-	# df = df.drop('Uncertainty',axis=1)
-
-	return df
 
 
 def prepareCalls(parameters, filenames, tags):
@@ -179,13 +110,13 @@ def prepareCalls(parameters, filenames, tags):
 			# loadCount(filenames, min_freq = 1, binary = False, normalize = True)
 			calls.append((bow.loadCount,[filenames, 3, True, True]))
 		elif feature.lower() == 'uncertainty':
-			calls.append((getUncertainty,[filenames]))
+			calls.append((metrics.getUncertainty,[filenames]))
 		elif feature.lower() == 'pausality':
-			calls.append((getPausality,[filenames]))
+			calls.append((metrics.getPausality,[filenames]))
 		elif feature.lower() == 'nonimmediacy':
-			calls.append((getNonImmediacy,[filenames]))
+			calls.append((metrics.getNonImmediacy,[filenames]))
 		elif feature.lower() == 'emotivity':
-			calls.append((getEmotivity,[filenames]))
+			calls.append((metrics.getEmotivity,[filenames]))
 		else:
 			raise ValueError(feature + ' is not a valid feature')
 
@@ -193,17 +124,17 @@ def prepareCalls(parameters, filenames, tags):
 
 
 def extractFeatures(parameters, calls, output_csv, ids, tags, verb = True):
+	logger = logging.getLogger(__name__)
+
 	# Extracts each feature described in the calls list
 	for parameter,call in zip(parameters, calls):
 		
-		if verb:
-			print('Extracting', parameter, '...',end='',flush=True)
+		logger.info('Extracting '+ str(parameter))
 
 		#if this feature was already extracted, dont need to extract it again
 		feature_filename = output_csv + parameter.lower()
 		if(os.path.isfile(feature_filename + '.csv')):
-			if verb:
-				print('csv already exists. next...',flush=True)
+			logger.info('csv already exists. Skipping this extraction')
 			continue;
 
 
@@ -216,20 +147,14 @@ def extractFeatures(parameters, calls, output_csv, ids, tags, verb = True):
 		result_df = pd.concat([ids,result,tags],axis=1)
 		result_df = result_df.set_index('Id')
 
-		if verb:
-			print('done',flush=True)
-
-		if verb:
-			print('Creating csv...',end='',flush=True)
+		logger.info('done. Creating csv')
 
 		# writes a csv for the extracted feature
 		with open(feature_filename + '.csv', 'w', encoding='utf8',) as f:
 			result_df.to_csv(f)
-		if verb:
-			print('done',flush=True)
+		logger.info('done')
 
-	if verb:
-		print('Extraction Complete',flush=True)
+	logger.info('Extraction Complete')
 
 
 def joincsv(filenames):
@@ -272,37 +197,37 @@ def main():
 
 	output_csv, news_dir, parameters, verb, join = parseArguments(choices)
 
-	if(verb):
-		print(*sys.argv,sep = ' ')
+	# logger setup
+	logging.basicConfig()
+	logger = logging.getLogger(__name__)
+	# if verbosity is on, set logger to info level
+	if verb: logger.setLevel(logging.INFO) 
+
+	logger.debug(str(sys.argv))
 
 	# creating output dir
 	if(output_csv != ''):
 		os.makedirs(output_csv, exist_ok=True)
 
 	#loading corpus
-	if(verb):
-		print('generating filenames list...',end='',flush=True)
+	logger.info('generating filenames list')
 	ids, filenames, tags = loadCorpus(news_dir)
-	if(verb):
-		print('done',flush=True)
+	logger.info('done')
 
 	#generating a list with calls to feature extraction methods and their parameters
-	if(verb):
-		print('generating parameters list...',end='',flush=True)
+	logger.info('generating parameters list')
 	calls = prepareCalls(parameters, filenames, tags)
-	if(verb):
-		print('done',flush=True)
+	logger.info('done')
 
 	#extracts all features
 	extractFeatures(parameters, calls, output_csv, ids, tags, verb)
 
 	#joins the resulting csvs files into a single one.
 	if(join):
-		if verb:
-			print('Joining csv...',end='',flush=True)
+		logger.info('joining csv')
 		joinFeatures(parameters, output_csv)
 		if verb:
-			print('Done',flush=True)
+			logger.info('done')
 
 
 if __name__ == '__main__':
