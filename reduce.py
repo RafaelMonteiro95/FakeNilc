@@ -1,13 +1,30 @@
 import preprocess.reduce as rc
 import os
+import argparse
 
-if __name__ == '__main__':
-	
 
-	##TODO: Parse these from CLI
-	news_dir = 'db'
-	output_dir = 'var/texts'
-	##END TODO
+# create a argparser
+def prepareArgParser():
+	arg_parser = argparse.ArgumentParser(description='A fake news classifier training system')
+	arg_parser.add_argument('input_dir', help='path to the folder containing texts to be reduced.')
+	arg_parser.add_argument('-o','--output', help='output folder', default='reduced_texts')
+	arg_parser.add_argument('-t','--truncate', help='truncates text instead of waiting for end of sentence.', action='store_true')
+	arg_parser.add_argument('-v','--verbose', help='output verbosity.', action='store_true')
+	return arg_parser
+
+
+# parses arguments from argparser
+def parseArgs(arg_parser):
+	args = arg_parser.parse_args()
+	news_dir = args.input_dir
+	output_dir = args.output
+	truncate = args.truncate
+	verbose = args.verbose
+	return (news_dir, output_dir, truncate, verbose)
+
+
+def main():
+	news_dir, output_dir, truncate, verbose = parseArgs(prepareArgParser())
 
 	# creating dir for storing reduced texts
 	os.makedirs(output_dir, exist_ok=True)
@@ -35,10 +52,15 @@ if __name__ == '__main__':
 			with open(pair[1], encoding='utf8') as fake:
 
 				#read both files and reduce the lenght of the biggest
-				result = rc.reduce(real.read(),fake.read())
+				result = rc.reduce(real.read(),fake.read(), truncate)
 
 				#saves result
 				with open(output_dir + 'real/' + real_name,'w', encoding='utf8') as f:
 					print(result[0],file=f)
 				with open(output_dir + 'fake/' + fake_name,'w', encoding='utf8') as f:
 					print(result[1],file=f)
+
+
+if __name__ == '__main__':
+	main()
+	

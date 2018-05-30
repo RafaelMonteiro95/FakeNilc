@@ -7,24 +7,17 @@ import numpy as np
 import pandas as pd
 
 
-def parseArguments(choices):
-	parameters = []
+def parseArguments():
 
+	choices = ['unigram','unigram-binary','liwc','pos','metrics','pausality','uncertainty','emotivity','nonimmediacy','all']
 	#parsing command line arguments
 	arg_parser = argparse.ArgumentParser(description='A text feature extraction system. Extracts selected features and saves it in one or multiple .csv files')
 	arg_parser.add_argument('texts_dir', help='path to the folder containing news used as dataset')
-	arg_parser.add_argument('features', help='features to be extracted. If All is selected, then all features will be extracted. Multiple options can be selected.', nargs='+', choices=choices)
-	arg_parser.add_argument('-o', '--output_location', help='path to the output location', default='.')
-	arg_parser.add_argument('-j','--join', help='if resulting csvs should be joined in one single file or not', action='store_true')
-	arg_parser.add_argument('-v','--verbose', help='output all steps happening', action='store_true')
+	arg_parser.add_argument('-o', '--output_dir', help='path to where the output (generated csvs) should be saved', default='.')
+	arg_parser.add_argument('-f', '--features', help='Features to be extracted. Default: all', nargs='+', default=['all'], choices=choices)
+	arg_parser.add_argument('-v','--verbose', help='output messages at each step', action='store_true')
 	arg_parser.add_argument('-d','--debug', help='output debug messages', action='store_true')
 	args = arg_parser.parse_args()
-
-	#checking for output location
-	if args.output_location == '.':
-		output_csv = ''
-	else:
-		output_csv = args.output_location
 
 	#checking for texts location
 	if args.texts_dir == '.':
@@ -32,9 +25,24 @@ def parseArguments(choices):
 	else:
 		news_dir = args.texts_dir
 
+	#checking for output location
+	if args.output_dir == '.':
+		output_dir = ''
+	else:
+		output_dir = args.output_dir
+
 	#appending the selected parameters
+	parameters = []
 	if 'all' in [par.lower() for par in args.features]:
 		parameters = choices
+		#unigrams based on word occurence is default, this removes unigrams based on word frequency
+		parameters.remove('unigram')
+		#since 'metrics' depends on external extraction of non-immediacy and uncertainty, they also aren't extracted by default
+		parameters.remove('metrics')
+		parameters.remove('pausality')
+		parameters.remove('uncertainty')
+		parameters.remove('emotivity')
+		parameters.remove('nonimmediacy')
 		parameters.remove('all')
 	else:
 		for parameter in args.features:
@@ -46,10 +54,7 @@ def parseArguments(choices):
 	#debugging output
 	debug = args.debug
 
-	#if we have to join the csvs
-	join = args.join
-
-	return (output_csv, news_dir, parameters, verb, join)
+	return (output_dir, news_dir, parameters, verb, debug)
 
 
 def loadCorpus(news_dir):
@@ -94,21 +99,12 @@ def prepareCalls(parameters, filenames, tags):
 			# loadMetrics(filenames):
 			calls.append((metrics.loadMetrics,[filenames]))
 		#extracts unigrams
-		elif feature.lower() == 'unigram-mf3':
-			# loadCount(filenames, min_freq = 1, binary = False, normalize = True)
-			calls.append((bow.loadCount,[filenames,3]))
 		elif feature.lower() == 'unigram':
 			# loadCount(filenames, min_freq = 1, binary = False, normalize = True)
 			calls.append((bow.loadCount,[filenames]))
 		elif feature.lower() == 'unigram-binary':
 			# loadCount(filenames, min_freq = 1, binary = False, normalize = True)
 			calls.append((bow.loadCount,[filenames,1, True, False]))
-		elif feature.lower() == 'unigram-binary-mf3':
-			# loadCount(filenames, min_freq = 1, binary = False, normalize = True)
-			calls.append((bow.loadCount,[filenames, 3, True, False]))
-		elif feature.lower() == 'unigram-binary-mf3-normalized':
-			# loadCount(filenames, min_freq = 1, binary = False, normalize = True)
-			calls.append((bow.loadCount,[filenames, 3, True, True]))
 		elif feature.lower() == 'uncertainty':
 			calls.append((metrics.getUncertainty,[filenames]))
 		elif feature.lower() == 'pausality':
@@ -136,7 +132,6 @@ def extractFeatures(parameters, calls, output_csv, ids, tags, verb = True):
 		if(os.path.isfile(feature_filename + '.csv')):
 			logger.info('csv already exists. Skipping this extraction')
 			continue;
-
 
 		#calling the function
 		feature_method = call[0]
@@ -193,9 +188,7 @@ def joinFeatures(parameters, output_csv):
 
 def main():
 
-	choices = ['unigram-mf3','unigram-binary','unigram-binary-mf3','unigram-binary-mf3-normalized','unigram','liwc','pos','metrics','pausality','uncertainty','emotivity','nonimmediacy','all']
-
-	output_csv, news_dir, parameters, verb, join = parseArguments(choices)
+	output_csv, news_dir, parameters, verb, join = parseArguments()
 
 	# logger setup
 	logging.basicConfig()
@@ -223,11 +216,11 @@ def main():
 	extractFeatures(parameters, calls, output_csv, ids, tags, verb)
 
 	#joins the resulting csvs files into a single one.
-	if(join):
-		logger.info('joining csv')
-		joinFeatures(parameters, output_csv)
-		if verb:
-			logger.info('done')
+	# if(join):
+	# 	logger.info('joining csv')
+	# 	joinFeatures(parameters, output_csv)
+	# 	if verb:
+	# 		logger.info('done')
 
 
 if __name__ == '__main__':

@@ -12,7 +12,8 @@ with warnings.catch_warnings():
 	warnings.filterwarnings("ignore",category=FutureWarning)
 	from nlpnet import POSTagger
 
-def loadMetricsCSV(csv_filenames):
+##this function needs to be revisited. I'm not sure how I should use the external metrics, so I'll keep this on hold.
+def loadMetricsCSV(dir):
 
 	#loading data
 	fakes = pd.read_csv(csv_filenames[0], delimiter = ',', converters={'id':str})
@@ -150,8 +151,7 @@ def loadMetrics(filenames):
 	#loading nlpnet	
 	tagger = POSTagger(r'var/nlpnet', language='pt')
 
-	# labels = list({'ADJ': 0, 'ADV': 0, 'ADV-KS': 0, 'ART': 0, 'CUR': 0, 'IN': 0, 'KC': 0, 'KS': 0, 'N': 0, 'NPROP': 0, 'NUM': 0, 'PCP': 0, 'PDEN': 0, 'PREP': 0, 'PROADJ': 0, 'PRO-KS': 0, 'PROPESS': 0, 'PROSUB': 0, 'V': 0, 'PU': 0}.keys())
-	labels = ['Pausality', 'Emotivity'] #, 'Uncertainty', 'Nonimediatism']
+	labels = ['Pausality', 'Emotivity']
 
 	#loading files
 	for filename in filenames:
@@ -165,7 +165,7 @@ def loadMetrics(filenames):
 	# turns data matrix into a dataframe
 	df = pd.DataFrame(data,columns=labels)
 	# loads features that i already have saved in .csv files
-	df_extra_features = loadMetricsCSV(['fakes.csv','reals.csv'])
+	df_extra_features = loadMetricsCSV('var/metrics_csv')
 	# concatenates the two dataframes: the one with features i've extracted, and the one with features i got from the .csv files
 	df = pd.concat([df,df_extra_features],axis=1).drop('Id',axis=1)
 	

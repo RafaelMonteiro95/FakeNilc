@@ -28,10 +28,10 @@ class preprocessor:
 		result = self.removeNumbers(self.removePonctuation(string)).lower()
 
 		if useStopWords and stem:
-			result = ' '.join([stemmer.stem(word) for word in result.split() if word not in cachedStopWords])
+			result = ' '.join([self.stemmer.stem(word) for word in result.split() if word not in self.cachedStopWords])
 		elif useStopWords:
-			result = ' '.join([word for word in result.split() if word not in cachedStopWords])
+			result = ' '.join([word for word in result.split() if word not in self.cachedStopWords])
 		elif stem:
-			result = ' '.join([stemmer.stem(word) for word in result.split()])
+			result = ' '.join([self.stemmer.stem(word) for word in result.split()])
 
 		return result

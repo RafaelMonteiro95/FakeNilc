@@ -15,16 +15,18 @@ import numpy as np
 #TODO: add logging system, and remove prints
 
 def prepareArgParser():
-	choices = ['svc','linearsvc','naive_bayes','randomforest', 'all', 'mlp']
+	clf_choices = ['svc','linearsvc','naive_bayes','randomforest', 'all', 'mlp']
+	
 
 	arg_parser = argparse.ArgumentParser(description='A fake news classifier training system')
 	arg_parser.add_argument('dataset_filenames', help='path to the files used as datasets.', nargs='+')
 	arg_parser.add_argument('--n_jobs', help='number of threads to use when cross validating', type=int, default=2)
 	arg_parser.add_argument('-v','--verbose', help='output verbosity.', action='store_true')
 	arg_parser.add_argument('-d','--debug', help='output debug messages', action='store_true')
+	arg_parser.add_argument('-m','--missed', help='print ids of instances that were incorrectly classified', action='store_true')
 	arg_parser.add_argument('-lc','--learning_curve_steps', help='no. of percentages used in learning curve. If -1, the learning curve is not calculated (default)', type=int, default=1)
 	arg_parser.add_argument('-o','--output', help='output filename', type=argparse.FileType('w', encoding='UTF-8'), default='-')
-	arg_parser.add_argument('-c','--classifier', help='Specific classifier to be used. If ommited, uses all classifiers except for MLPClassifier', choices=choices)
+	arg_parser.add_argument('-c','--classifier', help='Specific classifier to be used. If ommited, uses all classifiers except for MLPClassifier', choices=clf_choices)
 	return arg_parser
 
 
@@ -41,6 +43,8 @@ def parseArguments():
 	flags['v'] = (args.verbose or args.debug)
 	#debug verbosity
 	flags['d'] = args.debug
+	#print incorrect classifications ids
+	flags['m'] = args.missed
 	#paralelism level used in cross validation
 	flags['n_jobs'] = args.n_jobs if args.n_jobs else 2
 	#no. of percentages used in learning curve
@@ -106,6 +110,7 @@ def printResults(classifier, real, predicts, f = sys.stdout):
 
 	#printing classification report
 	print('Classifier:', classifier, file=f)
+	print('Accuracy:', accuracy_score(real,predicts[-1]), file=f)
 	print(classification_report(real,predicts[-1]), file = f)
 
 	#printing confusion matrix
@@ -167,8 +172,9 @@ def main():
 			del clf
 		print('==============',file=output)
 
-		missed = [Ids[i] + ' Classified as ' + predicts[-1][i] + '\n' for i in range(len(y)) if predicts[-1][i] != y[i] ]
-		print(*missed, file = output)
+		if flags['m']:
+			missed = [Ids[i] + ' Classified as ' + predicts[-1][i] + '\n' for i in range(len(y)) if predicts[-1][i] != y[i] ]
+			print(*missed, file = output)
 
 	logger.info('Done')
 

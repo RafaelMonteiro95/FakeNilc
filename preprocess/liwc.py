@@ -82,6 +82,7 @@ class LIWC:
 
 		return wordFreqs
 
+
 #function that loads the corpus and counts LIWC classes frequencies
 def loadLiwc(filenames):
 	data = []
