@@ -70,6 +70,27 @@ def parseArguments():
 
 	return (dataset_filenames, flags, output, classifier)
 
+def loadDatasets(filenames):
+	#resulting dataframe
+	dfr = pd.read_csv(filenames[0],index_col=0)
+	#dataframe that stores the tags
+	#saves the tag column on the 1st csv
+	tags = tags = dfr.iloc[:,-1]
+	dfr = dfr.drop('Tag',axis=1)
+	# reading files
+	for i in range(1,len(filenames)):
+		#loads csv into df
+		df = pd.read_csv(filenames[i],index_col=0)
+		#removes the tag column
+		df = df.drop('Tag',axis=1)
+		#concatenate the new dataframe with resulting dataframe
+		dfr = pd.concat([dfr,df],axis=1)
+
+	#concatenates the resulting dataframe with the tags dataframe
+	dfr = pd.concat([dfr,tags],axis=1)
+
+	return dfr
+
 
 def getDatasetValues(df):
 	# Getting the tags column and saving it into y
@@ -142,39 +163,41 @@ def main():
 	if flags['v']: logger.setLevel(logging.INFO) 
 	if flags['d']: logger.setLevel(logging.DEBUG) 
 
+	#loading datasets
+	dataset_name = '-'.join([name.split('/')[-1].replace('.csv','') for name in dataset_filenames])
+	logger.info('Loading dataset ' + dataset_name)
+	#loads the dataset into a pandas dataframe
+	df = loadDatasets(dataset_filenames)
+
 	# for each file in the dataset files
-	for dataset_filename in dataset_filenames:
-		print('Dataset:', dataset_filename, file=output)
+	# for dataset_filename in dataset_filenames:
+	print('Dataset:', dataset_name, file=output)
 
-		#loads the dataset into a pandas dataframe
-		logger.info('Loading dataset ' + dataset_filename)
-		df = pd.read_csv(dataset_filename, encoding='utf8', index_col=0)
+	#split the dataframe in X(data) and y(labels)
+	logger.info('Splitting labels and data...')
+	X, y, Ids = getDatasetValues(df)
 
-		#split the dataframe in X(data) and y(labels)
-		logger.info('Splitting labels and data...')
-		X, y, Ids = getDatasetValues(df)
+	predicts = []
+	#trains and evaluate each classifier described in classifiers
+	for clf in classifiers:
 
-		predicts = []
-		#trains and evaluate each classifier described in classifiers
-		for clf in classifiers:
+		logger.info('Evaluating ' + clf.__class__.__name__)
 
-			logger.info('Evaluating ' + clf.__class__.__name__)
+		#predicts is a list with lists of labels classified in a 5-fold cross validation evaluation of the classifiers
+		#each value in predicts represents a percentage of the dataset used for validation
+		#i.e. if predicts contains 3 items, then p[0] used 33% p[1] used 66% and p[2] used 100% of the dataset for evaluation
+		predicts = predictAndEvaluate(clf, X, y, flags['lc'] , flags['n_jobs'], flags['v'])
 
-			#predicts is a list with lists of labels classified in a 5-fold cross validation evaluation of the classifiers
-			#each value in predicts represents a percentage of the dataset used for validation
-			#i.e. if predicts contains 3 items, then p[0] used 33% p[1] used 66% and p[2] used 100% of the dataset for evaluation
-			predicts = predictAndEvaluate(clf, X, y, flags['lc'] , flags['n_jobs'], flags['v'])
+		logger.info('Printing Results')
+		printResults(clf.__class__.__name__, y, predicts, f=output)
 
-			logger.info('Printing Results')
-			printResults(clf.__class__.__name__, y, predicts, f=output)
+		#After evaluating, deletes the used classifier
+		del clf
+	print('==============',file=output)
 
-			#After evaluating, deletes the used classifier
-			del clf
-		print('==============',file=output)
-
-		if flags['m']:
-			missed = [Ids[i] + ' Classified as ' + predicts[-1][i] + '\n' for i in range(len(y)) if predicts[-1][i] != y[i] ]
-			print(*missed, file = output)
+	if flags['m']:
+		missed = [Ids[i] + ' Classified as ' + predicts[-1][i] + '\n' for i in range(len(y)) if predicts[-1][i] != y[i] ]
+		print(*missed, file = output)
 
 	logger.info('Done')
 

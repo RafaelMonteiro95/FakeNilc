@@ -82,7 +82,7 @@ def loadCorpus(news_dir):
 	return (ids, filenames, tags)
 
 
-def prepareCalls(parameters, filenames, tags):
+def prepareCalls(parameters, filenames, tags, output_dir):
 	#preparing features for extraction
 	calls = []
 	for feature in parameters:
@@ -106,13 +106,13 @@ def prepareCalls(parameters, filenames, tags):
 			# loadCount(filenames, min_freq = 1, binary = False, normalize = True)
 			calls.append((bow.loadCount,[filenames,1, True, False]))
 		elif feature.lower() == 'uncertainty':
-			calls.append((metrics.getUncertainty,[filenames]))
+			calls.append((metrics.getUncertainty,[filenames, output_dir]))
 		elif feature.lower() == 'pausality':
-			calls.append((metrics.getPausality,[filenames]))
+			calls.append((metrics.getPausality,[filenames, output_dir]))
 		elif feature.lower() == 'nonimmediacy':
-			calls.append((metrics.getNonImmediacy,[filenames]))
+			calls.append((metrics.getNonImmediacy,[filenames, output_dir]))
 		elif feature.lower() == 'emotivity':
-			calls.append((metrics.getEmotivity,[filenames]))
+			calls.append((metrics.getEmotivity,[filenames, output_dir]))
 		else:
 			raise ValueError(feature + ' is not a valid feature')
 
@@ -152,28 +152,6 @@ def extractFeatures(parameters, calls, output_csv, ids, tags, verb = True):
 	logger.info('Extraction Complete')
 
 
-def joincsv(filenames):
-	#resulting dataframe
-	dfr = pd.read_csv(filenames[0],index_col=0)
-	#dataframe that stores the tags
-	#saves the tag column on the 1st csv
-	tags = tags = dfr.iloc[:,-1]
-	dfr = dfr.drop('Tag',axis=1)
-	# reading files
-	for i in range(1,len(filenames)):
-		#loads csv into df
-		df = pd.read_csv(filenames[i],index_col=0)
-		#removes the tag column
-		df = df.drop('Tag',axis=1)
-		#concatenate the new dataframe with resulting dataframe
-		dfr = pd.concat([dfr,df],axis=1)
-
-	#concatenates the resulting dataframe with the tags dataframe
-	dfr = pd.concat([dfr,tags],axis=1)
-
-	return dfr
-
-
 def joinFeatures(parameters, output_csv):
 
 	#generating a list with .csv files to load dataframes
@@ -209,7 +187,7 @@ def main():
 
 	#generating a list with calls to feature extraction methods and their parameters
 	logger.info('generating parameters list')
-	calls = prepareCalls(parameters, filenames, tags)
+	calls = prepareCalls(parameters, filenames, tags, output_csv)
 	logger.info('done')
 
 	#extracts all features

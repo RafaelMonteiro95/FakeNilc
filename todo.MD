@@ -1,7 +1,7 @@
 # TO DO
 
 ## General
-Update verbosity system to use logs instead of prints (partially done, need to check reduce and classify.py)
+Update verbosity system to use logs instead of prints (partially done, need to check preprocessing module files)
 
 ## extract.py
 Fix loadMetrics. Load metrics that I can't calculate from csv files correctly.

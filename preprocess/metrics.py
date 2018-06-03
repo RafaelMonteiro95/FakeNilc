@@ -12,22 +12,27 @@ with warnings.catch_warnings():
 	warnings.filterwarnings("ignore",category=FutureWarning)
 	from nlpnet import POSTagger
 
-##this function needs to be revisited. I'm not sure how I should use the external metrics, so I'll keep this on hold.
-def loadMetricsCSV(dir):
+#Note: this fucntion depends on how the atributes are stored and isn't really bugproof. Rewrite this whenever needed.
+def loadMetricsCSV(path):
 
-	#loading data
-	fakes = pd.read_csv(csv_filenames[0], delimiter = ',', converters={'id':str})
-	reals = pd.read_csv(csv_filenames[1], delimiter = ',', converters={'id':str})
+	#opening datasets
+	ni_fake = pd.read_csv(path + 'non_immediacy_fake.csv', delimiter=';', header=None, names=['id','non_immediacy'], converters={'id':str})
+	un_fake = pd.read_csv(path + 'uncertainty_fake.csv', delimiter=';', header=None, names=['id','uncertainty'], converters={'id':str})
+	ni_real = pd.read_csv(path + 'non_immediacy_true.csv', delimiter=';', header=None, names=['id','non_immediacy'], converters={'id':str})
+	un_real = pd.read_csv(path + 'uncertainty_true.csv', delimiter=';', header=None, names=['id','uncertainty'], converters={'id':str})
+
+	reals = pd.merge(ni_real, un_real, on='id')
+	fakes = pd.merge(ni_fake, un_fake, on='id')
 
 	#changing id format
 	fakes.id += '-FAKE'
 	reals.id += '-REAL'
 
-	# #appending tags
+	#appending tags
 	fakes['Tag'] = ['FAKE' for i in range(fakes.shape[0])]
 	reals['Tag'] = ['REAL' for i in range(reals.shape[0])]
 
-	# #setting dataframe index col
+	#setting dataframe index col
 	fakes = fakes.rename({'id':'Id'},axis='columns').set_index('Id')
 	reals = reals.rename({'id':'Id'},axis='columns').set_index('Id')
 
@@ -35,7 +40,10 @@ def loadMetricsCSV(dir):
 	df = pd.concat([fakes,reals]).sort_index().rename({'qtd_modals/qtd_verbs':'Uncertainty','(qtd_ind_reference+qtd_group_reference)/qtd_pronouns':'nonImediacy'},axis='columns')
 	df = df.reset_index()
 
-	#returns the resulting dataframe without the tag column
+	df = df.rename({'non_immediacy':'nonImediacy'},axis='columns')
+	df = df.rename({'uncertainty':'Uncertainty'},axis='columns')
+
+	# #returns the resulting dataframe without the tag column
 	return df.drop('Tag',axis=1)
 
 
@@ -71,11 +79,9 @@ def countTags(text, tagger):
 	return result
 
 
-def getNonImmediacy(filenames):
-	with open('metrics.csv', encoding='utf8') as features:
+def getNonImmediacy(filenames,metrics_path):
+	with open(metrics_path + 'metrics.csv', encoding='utf8') as features:
 		df = pd.read_csv(features,index_col=0)
-
-	print(df.head())
 
 	#Pausality,Emotivity,nonImediacy,Uncertainty
 	# Dropping the column with tags
@@ -90,11 +96,9 @@ def getNonImmediacy(filenames):
 	return df
 
 
-def getPausality(filenames):
-	with open('metrics.csv', encoding='utf8') as features:
+def getPausality(filenames,metrics_path):
+	with open(metrics_path + 'metrics.csv', encoding='utf8') as features:
 		df = pd.read_csv(features,index_col=0)
-
-	print(df.head())
 
 	#Pausality,Emotivity,nonImediacy,Uncertainty
 	# Dropping the column with tags
@@ -109,8 +113,8 @@ def getPausality(filenames):
 	return df
 
 
-def getEmotivity(filenames):
-	with open('metrics.csv', encoding='utf8') as features:
+def getEmotivity(filenames,metrics_path):
+	with open(metrics_path + 'metrics.csv', encoding='utf8') as features:
 		df = pd.read_csv(features,index_col=0)
 
 	#Pausality,Emotivity,nonImediacy,Uncertainty
@@ -126,8 +130,8 @@ def getEmotivity(filenames):
 	return df
 
 
-def getUncertainty(filenames):
-	with open('metrics.csv', encoding='utf8') as features:
+def getUncertainty(filenames,metrics_path):
+	with open(metrics_path + 'metrics.csv', encoding='utf8') as features:
 		df = pd.read_csv(features,index_col=0)
 
 	#Pausality,Emotivity,nonImediacy,Uncertainty
@@ -165,7 +169,7 @@ def loadMetrics(filenames):
 	# turns data matrix into a dataframe
 	df = pd.DataFrame(data,columns=labels)
 	# loads features that i already have saved in .csv files
-	df_extra_features = loadMetricsCSV('var/metrics_csv')
+	df_extra_features = loadMetricsCSV('var/metrics_csv/')
 	# concatenates the two dataframes: the one with features i've extracted, and the one with features i got from the .csv files
 	df = pd.concat([df,df_extra_features],axis=1).drop('Id',axis=1)
 	
