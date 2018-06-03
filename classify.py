@@ -70,12 +70,13 @@ def parseArguments():
 
 	return (dataset_filenames, flags, output, classifier)
 
+
 def loadDatasets(filenames):
 	#resulting dataframe
 	dfr = pd.read_csv(filenames[0],index_col=0)
 	#dataframe that stores the tags
 	#saves the tag column on the 1st csv
-	tags = tags = dfr.iloc[:,-1]
+	tags = dfr.iloc[:,-1]
 	dfr = dfr.drop('Tag',axis=1)
 	# reading files
 	for i in range(1,len(filenames)):

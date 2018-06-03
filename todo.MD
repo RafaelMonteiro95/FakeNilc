@@ -4,7 +4,6 @@
 Update verbosity system to use logs instead of prints (partially done, need to check preprocessing module files)
 
 ## extract.py
-Fix loadMetrics. Load metrics that I can't calculate from csv files correctly.
 Switch from multiple scripts with functions to multiple classes with methods. Create an abstract Feature class with method Load that extracts the required features and labels
 Extract some of coh-metrics features using another tool (coh-metrix doesn't work for some texts)
 Create interface compatible with scikit-learn
