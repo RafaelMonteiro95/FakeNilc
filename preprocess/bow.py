@@ -22,6 +22,26 @@ def removeMinFreq(data, labels, min_freq = 1):
 	labels = np.delete(labels,del_indexes,0)
 	return (data, labels)
 
+def removeMinFreqDf(df, min_freq = 1):
+
+	data = np.array(df.values)
+	labels = np.array(df.columns.values)
+
+	# counting no. of ocurrences per word
+	cols_sum = np.sum(data, axis=0)
+
+	#creating an array with indexes of columns that must be deleted 
+	del_labels = []
+	#for each val[i] in the cols_sum
+	for i, val in zip(range(len(cols_sum)), cols_sum):
+		#if that val is smaller than the minimun freq. insert i into the array
+		if val < min_freq:
+			del_labels.append(labels[i])
+
+	#deleting columns with minimum frequency smaller than x
+	#calls np.delete on the array, asking it to delete all columns with indexes given by del_indexes
+	return df.drop(del_labels,axis=1)
+
 
 #normalizes attributes frequencies
 def normalizeData(data):

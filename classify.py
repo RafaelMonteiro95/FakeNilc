@@ -10,7 +10,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
 import pandas as pd 
 import numpy as np
-
+from preprocess import bow
 
 #TODO: add logging system, and remove prints
 
@@ -21,9 +21,11 @@ def prepareArgParser():
 	arg_parser = argparse.ArgumentParser(description='A fake news classifier training system')
 	arg_parser.add_argument('dataset_filenames', help='path to the files used as datasets.', nargs='+')
 	arg_parser.add_argument('--n_jobs', help='number of threads to use when cross validating', type=int, default=2)
+	arg_parser.add_argument('-s','--simple', help='prints simple results.', action='store_true')
 	arg_parser.add_argument('-v','--verbose', help='output verbosity.', action='store_true')
 	arg_parser.add_argument('-d','--debug', help='output debug messages', action='store_true')
 	arg_parser.add_argument('-m','--missed', help='print ids of instances that were incorrectly classified', action='store_true')
+	arg_parser.add_argument('-mf','--minimum_frequency', help='minimum frequency for unigrams', type=int, default=1)
 	arg_parser.add_argument('-lc','--learning_curve_steps', help='no. of percentages used in learning curve. If -1, the learning curve is not calculated (default)', type=int, default=1)
 	arg_parser.add_argument('-o','--output', help='output filename', type=argparse.FileType('w', encoding='UTF-8'), default='-')
 	arg_parser.add_argument('-c','--classifier', help='Specific classifier to be used. If ommited, uses all classifiers except for MLPClassifier', choices=clf_choices)
@@ -49,6 +51,10 @@ def parseArguments():
 	flags['n_jobs'] = args.n_jobs if args.n_jobs else 2
 	#no. of percentages used in learning curve
 	flags['lc'] = args.learning_curve_steps
+	#min. freq for unigrams
+	flags['mf'] = args.minimum_frequency
+	#simple output
+	flags['s'] = args.simple
 	#output file
 	output = args.output
 
@@ -71,20 +77,40 @@ def parseArguments():
 	return (dataset_filenames, flags, output, classifier)
 
 
-def loadDatasets(filenames):
+def loadDatasets(filenames, min_freq):
+	logger = logging.getLogger(__name__)
+
 	#resulting dataframe
+	logger.info('Opening ' + filenames[0])
 	dfr = pd.read_csv(filenames[0],index_col=0)
+
 	#dataframe that stores the tags
 	#saves the tag column on the 1st csv
 	tags = dfr.iloc[:,-1]
 	dfr = dfr.drop('Tag',axis=1)
+
+	#checking if dataframe contains unigram attributes
+	if("unigram" in filenames[0]):
+		logger.info('Applying frequency cut on dataframe with dimensions ' + str(dfr.values.shape))
+		#applies frequency cut
+		dfr = bow.removeMinFreqDf(dfr, min_freq)
+		logger.info('Resulting dimensions: ' + str(dfr.values.shape))
+
 	# reading files
 	for i in range(1,len(filenames)):
 		#loads csv into df
 		df = pd.read_csv(filenames[i],index_col=0)
+			
 		#removes the tag column
 		df = df.drop('Tag',axis=1)
-		#concatenate the new dataframe with resulting dataframe
+
+		#checking if dataframe contains unigram attributes
+		if("unigram" in filenames[i]):
+			logger.info('Applying frequency cut on dataframe with dimensions ' + str(df.values.shape))
+			#applies frequency cut
+			df = bow.removeMinFreqDf(df, min_freq)
+			logger.info('Resulting dimensions: ' + str(dfr.values.shape))
+
 		dfr = pd.concat([dfr,df],axis=1)
 
 	#concatenates the resulting dataframe with the tags dataframe
@@ -152,6 +178,14 @@ def printResults(classifier, real, predicts, f = sys.stdout):
 		print('Learning curve:',file=f)
 		print(scores,file=f)
 
+def printResultsSimple(classifier, real, predicts, f = sys.stdout):
+
+	logger = logging.getLogger(__name__)
+
+	#printing classification report
+	print('acc:', accuracy_score(real,predicts[-1]), file = f)
+	print(classification_report(real,predicts[-1]), file = f)
+
 
 def main():
 
@@ -168,7 +202,7 @@ def main():
 	dataset_name = '-'.join([name.split('/')[-1].replace('.csv','') for name in dataset_filenames])
 	logger.info('Loading dataset ' + dataset_name)
 	#loads the dataset into a pandas dataframe
-	df = loadDatasets(dataset_filenames)
+	df = loadDatasets(dataset_filenames, flags['mf'])
 
 	# for each file in the dataset files
 	# for dataset_filename in dataset_filenames:
@@ -190,7 +224,10 @@ def main():
 		predicts = predictAndEvaluate(clf, X, y, flags['lc'] , flags['n_jobs'], flags['v'])
 
 		logger.info('Printing Results')
-		printResults(clf.__class__.__name__, y, predicts, f=output)
+		if flags['s']:
+			printResultsSimple(clf.__class__.__name__, y, predicts, f=output)
+		else:
+			printResults(clf.__class__.__name__, y, predicts, f=output)
 
 		#After evaluating, deletes the used classifier
 		del clf
