@@ -7,7 +7,9 @@ import string
 class preprocessor:
 
 	def __init__(self):
-		self.cachedStopWords = stopwords.words('portuguese')
+		with open('var/stopwords.txt') as f:
+			self.cachedStopWords = f.read()
+		# self.cachedStopWords = stopwords.words('portuguese')
 		self.stemmer = nltk.stem.SnowballStemmer('portuguese')
 		self.translator = str.maketrans({key:' ' for key in string.punctuation})
 

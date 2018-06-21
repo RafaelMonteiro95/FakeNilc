@@ -8,6 +8,7 @@ from sklearn.svm import SVC, LinearSVC
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
+from sklearn.feature_selection import SelectKBest, mutual_info_classif
 import pandas as pd 
 import numpy as np
 from preprocess import bow
@@ -109,7 +110,7 @@ def loadDatasets(filenames, min_freq):
 			logger.info('Applying frequency cut on dataframe with dimensions ' + str(df.values.shape))
 			#applies frequency cut
 			df = bow.removeMinFreqDf(df, min_freq)
-			logger.info('Resulting dimensions: ' + str(dfr.values.shape))
+			logger.info('Resulting dimensions: ' + str(df.values.shape))
 
 		dfr = pd.concat([dfr,df],axis=1)
 
@@ -211,6 +212,17 @@ def main():
 	#split the dataframe in X(data) and y(labels)
 	logger.info('Splitting labels and data...')
 	X, y, Ids = getDatasetValues(df)
+
+	logger.info('Selecting K best features...')
+	slct = SelectKBest(mutual_info_classif, 10)
+	X_new = slct.fit(X,y)
+
+	for i in X_new.get_support(indices=True):
+		print(df.columns[i])
+
+	# print(X_new.get_support())
+	# print(X_new.ranking_)
+	return
 
 	predicts = []
 	#trains and evaluate each classifier described in classifiers
