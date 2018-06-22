@@ -179,6 +179,7 @@ def printResults(classifier, real, predicts, f = sys.stdout):
 		print('Learning curve:',file=f)
 		print(scores,file=f)
 
+
 def printResultsSimple(classifier, real, predicts, f = sys.stdout):
 
 	logger = logging.getLogger(__name__)
@@ -214,11 +215,14 @@ def main():
 	X, y, Ids = getDatasetValues(df)
 
 	logger.info('Selecting K best features...')
-	slct = SelectKBest(mutual_info_classif, 10)
-	X_new = slct.fit(X,y)
+	slct = SelectKBest(mutual_info_classif,20)
+	slct.fit(X,y)
 
-	for i in X_new.get_support(indices=True):
-		print(df.columns[i])
+	sortedList = []
+	for i in slct.get_support(indices=True):
+		sortedList.append((slct.scores_[i],df.columns[i]))
+
+	print(sorted(sortedList))
 
 	# print(X_new.get_support())
 	# print(X_new.ranking_)
