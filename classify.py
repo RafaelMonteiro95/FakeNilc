@@ -9,6 +9,7 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.feature_selection import SelectKBest, mutual_info_classif
+from sklearn.pipeline import make_pipeline
 import pandas as pd 
 import numpy as np
 from preprocess import bow
@@ -27,6 +28,7 @@ def prepareArgParser():
 	arg_parser.add_argument('-d','--debug', help='output debug messages', action='store_true')
 	arg_parser.add_argument('-m','--missed', help='print ids of instances that were incorrectly classified', action='store_true')
 	arg_parser.add_argument('-mf','--minimum_frequency', help='minimum frequency for unigrams', type=int, default=1)
+	arg_parser.add_argument('-fs','--feature_selection', help='realizes the evaluation of the most relevant features', type=int, default=-1)
 	arg_parser.add_argument('-lc','--learning_curve_steps', help='no. of percentages used in learning curve. If -1, the learning curve is not calculated (default)', type=int, default=1)
 	arg_parser.add_argument('-o','--output', help='output filename', type=argparse.FileType('w', encoding='UTF-8'), default='-')
 	arg_parser.add_argument('-c','--classifier', help='Specific classifier to be used. If ommited, uses all classifiers except for MLPClassifier', choices=clf_choices)
@@ -54,6 +56,8 @@ def parseArguments():
 	flags['lc'] = args.learning_curve_steps
 	#min. freq for unigrams
 	flags['mf'] = args.minimum_frequency
+	#min. freq for unigrams
+	flags['fs'] = args.feature_selection
 	#simple output
 	flags['s'] = args.simple
 	#output file
@@ -138,7 +142,7 @@ def getDatasetValues(df):
 	return (X, y, Id)
 
 
-def predictAndEvaluate(classifier, X, y, lc = 5,  n_jobs = 2, verbose = False):
+def predictAndEvaluate(classifier, X, y, lc = 5,  n_jobs = 2, verbose = False, feature_selection = -1):
 
 	logger = logging.getLogger(__name__)
 
@@ -148,7 +152,10 @@ def predictAndEvaluate(classifier, X, y, lc = 5,  n_jobs = 2, verbose = False):
 	predicts = []
 	for val in s:
 		logger.info('cross evaluating with '+ str((val/len(y))*100) + '% of corpus')
-		predicts.append( cross_val_predict(classifier, X[:val], y[:val], cv=5, verbose=verbose, n_jobs=n_jobs) )
+		if feature_selection > 0:
+			predicts.append( cross_val_predict(make_pipeline(SelectKBest(mutual_info_classif,feature_selection),classifier), X[:val], y[:val], cv=5, verbose=verbose, n_jobs=n_jobs) )
+		else:
+			predicts.append( cross_val_predict(classifier, X[:val], y[:val], cv=5, verbose=verbose, n_jobs=n_jobs) )
 
 	return predicts
 
@@ -214,19 +221,18 @@ def main():
 	logger.info('Splitting labels and data...')
 	X, y, Ids = getDatasetValues(df)
 
-	logger.info('Selecting K best features...')
-	slct = SelectKBest(mutual_info_classif,20)
-	slct.fit(X,y)
 
-	sortedList = []
-	for i in slct.get_support(indices=True):
-		sortedList.append((slct.scores_[i],df.columns[i]))
+	if flags['fs'] > 0:
+		logger.info('Selecting K best features...')
+		slct = SelectKBest(mutual_info_classif, flags['fs'])
+		slct.fit(X,y)
 
-	print(sorted(sortedList))
+		sortedList = []
+		for i in slct.get_support(indices=True):
+			sortedList.append((slct.scores_[i],df.columns[i]))
 
-	# print(X_new.get_support())
-	# print(X_new.ranking_)
-	return
+		print("Best {0} features:".format(flags['fs']),file=output)
+		print(sorted(sortedList),file=output)
 
 	predicts = []
 	#trains and evaluate each classifier described in classifiers
@@ -237,7 +243,7 @@ def main():
 		#predicts is a list with lists of labels classified in a 5-fold cross validation evaluation of the classifiers
 		#each value in predicts represents a percentage of the dataset used for validation
 		#i.e. if predicts contains 3 items, then p[0] used 33% p[1] used 66% and p[2] used 100% of the dataset for evaluation
-		predicts = predictAndEvaluate(clf, X, y, flags['lc'] , flags['n_jobs'], flags['v'])
+		predicts = predictAndEvaluate(clf, X, y, flags['lc'] , flags['n_jobs'], flags['v'], flags['fs'])
 
 		logger.info('Printing Results')
 		if flags['s']:
