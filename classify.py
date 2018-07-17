@@ -168,6 +168,9 @@ def predictAndEvaluate(classifier, X, y, dataset_name, lc = 5,  n_jobs = 2, verb
 		logger.info('Trainig model '+ model_name.split('.')[0]+ ' on full dataset')
 		#training model
 		classifier.fit(X, y)
+		# if model is unigram-based, I need to save the vocabulary
+		if 'unigram' in dataset_name:
+			
 		logger.info('dumping model')
 		#saving trained model using joblib
 		joblib.dump(classifier,model_name)
@@ -232,6 +235,10 @@ def main():
 	# for each file in the dataset files
 	# for dataset_filename in dataset_filenames:
 	print('Dataset:', dataset_name, file=output)
+
+	if flags['sm'] and ('unigram' in dataset_name):
+		logger.info('Dumping vocabulary to vocabulary.pkl')
+		joblib.dump(list(df),'vocabulary.pkl')
 
 	#split the dataframe in X(data) and y(labels)
 	logger.info('Splitting labels and data...')
