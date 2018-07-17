@@ -47,6 +47,16 @@ def countTags(text, tagger, normalize=True):
 
 	return result
 
+def vectorize(text, tagger = None):
+
+	if tagger == None:
+		tagger = POSTagger(r'var/nlpnet', language='pt')
+
+	labels = list({'ADJ': 0, 'ADV': 0, 'ADV-KS': 0, 'ART': 0, 'CUR': 0, 'IN': 0, 'KC': 0, 'KS': 0, 'N': 0, 'NPROP': 0, 'NUM': 0, 'PCP': 0, 'PDEN': 0, 'PREP': 0, 'PROADJ': 0, 'PRO-KS': 0, 'PROPESS': 0, 'PROSUB': 0, 'V': 0, 'PU': 0}.keys())
+	freqs = countTags(text,tagger)
+
+	return pd.DataFrame([freqs],columns=labels)
+
 
 #function that loads the corpus and counts LIWC classes frequencies
 def loadPos(filenames):

@@ -49,6 +49,23 @@ def normalizeData(data):
 	data = (data.T / rows_sum).T
 	return data
 
+#used to vectorize a single text with a given vocabulary.
+def vectorize(text, vocabulary, preprocessor = None):
+
+	# loading preprocessor
+	if preprocessor == None:
+		p = utils.preprocessor()
+
+	# Creating bag of words
+	vectorizer = CountVectorizer(preprocessor = p.prep, encoding='utf-8', binary = True, vocabulary = vocabulary);
+
+	# getting matrix with words frequencies for each document
+	data = np.array(vectorizer.fit_transform([text]).todense());
+	labels = np.array(vectorizer.get_feature_names())
+
+	#returns a pandas dataframe with data and labels
+	return pd.DataFrame(data,columns = labels)
+
 
 def loadCount(filenames, min_freq = 1, binary = False, normalize = True):
 

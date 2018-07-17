@@ -1,6 +1,7 @@
 import argparse
 import sys
 import logging
+from sklearn.externals import joblib
 from sklearn.model_selection import cross_val_predict, train_test_split
 from sklearn.metrics import classification_report , confusion_matrix, accuracy_score
 from sklearn.utils import shuffle
@@ -23,6 +24,7 @@ def prepareArgParser():
 	arg_parser = argparse.ArgumentParser(description='A fake news classifier training system')
 	arg_parser.add_argument('dataset_filenames', help='path to the files used as datasets.', nargs='+')
 	arg_parser.add_argument('--n_jobs', help='number of threads to use when cross validating', type=int, default=2)
+	arg_parser.add_argument('-sm','--save_model', help='if a trained .pickle model should be saved.', action='store_true')
 	arg_parser.add_argument('-s','--simple', help='prints simple results.', action='store_true')
 	arg_parser.add_argument('-v','--verbose', help='output verbosity.', action='store_true')
 	arg_parser.add_argument('-d','--debug', help='output debug messages', action='store_true')
@@ -62,6 +64,8 @@ def parseArguments():
 	flags['s'] = args.simple
 	#output file
 	output = args.output
+	#trained model must be generated and saved
+	flags['sm'] = args.save_model
 
 	#classifiers used. if 'all' or None, uses all classifiers
 	classifier = [LinearSVC(),
@@ -142,7 +146,7 @@ def getDatasetValues(df):
 	return (X, y, Id)
 
 
-def predictAndEvaluate(classifier, X, y, lc = 5,  n_jobs = 2, verbose = False, feature_selection = -1):
+def predictAndEvaluate(classifier, X, y, dataset_name, lc = 5,  n_jobs = 2, verbose = False, feature_selection = -1, save_model = False):
 
 	logger = logging.getLogger(__name__)
 
@@ -156,6 +160,18 @@ def predictAndEvaluate(classifier, X, y, lc = 5,  n_jobs = 2, verbose = False, f
 			predicts.append( cross_val_predict(make_pipeline(SelectKBest(mutual_info_classif,feature_selection),classifier), X[:val], y[:val], cv=5, verbose=verbose, n_jobs=n_jobs) )
 		else:
 			predicts.append( cross_val_predict(classifier, X[:val], y[:val], cv=5, verbose=verbose, n_jobs=n_jobs) )
+
+
+	if save_model:
+		#generating a filename for pickle file
+		model_name = (classifier.__class__.__name__ + '_' + (dataset_name.split('\\')[-1].split('/')[-1].split('.')[0]) + '.pkl').lower()
+		logger.info('Trainig model '+ model_name.split('.')[0]+ ' on full dataset')
+		#training model
+		classifier.fit(X, y)
+		logger.info('dumping model')
+		#saving trained model using joblib
+		joblib.dump(classifier,model_name)
+
 
 	return predicts
 
@@ -243,7 +259,7 @@ def main():
 		#predicts is a list with lists of labels classified in a 5-fold cross validation evaluation of the classifiers
 		#each value in predicts represents a percentage of the dataset used for validation
 		#i.e. if predicts contains 3 items, then p[0] used 33% p[1] used 66% and p[2] used 100% of the dataset for evaluation
-		predicts = predictAndEvaluate(clf, X, y, flags['lc'] , flags['n_jobs'], flags['v'], flags['fs'])
+		predicts = predictAndEvaluate(clf, X, y, dataset_name, flags['lc'] , flags['n_jobs'], flags['v'], flags['fs'], flags['sm'])
 
 		logger.info('Printing Results')
 		if flags['s']:
