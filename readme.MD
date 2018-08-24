@@ -5,7 +5,9 @@ This project contains tools used to train classifiers that identify deceptive te
 
 For this project, a corpora with fake and real texts news was compiled. Each fake news has a real counterpart, extracted from trustworthy pt-br news websites, such as https://g1.globo.com/, https://www.folha.uol.com.br/ or http://www.estadao.com.br/. Each file contains a single news text and is named as `<ID>.txt`, where ID is an integer from 1 to 3600.
 
-More details soon!
+The corpus used in this project can be found in https://github.com/roneysco/Fake.br-Corpus
+
+For more informations, please visit http://nilc-fakenews.herokuapp.com/ or https://sites.google.com/icmc.usp.br/opinando/
 
 ## Usage
 
