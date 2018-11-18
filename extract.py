@@ -2,14 +2,14 @@ import os
 import sys
 import argparse
 import logging
-from preprocess import liwc, bow, pos, metrics
+from preprocess import liwc, bow, pos, syntax, metrics
 import numpy as np
 import pandas as pd
 
 
 def parseArguments():
 
-	choices = ['unigram','unigram-binary','liwc','pos','metrics','pausality','uncertainty','emotivity','nonimmediacy','all']
+	choices = ['unigram','unigram-binary','liwc','pos','metrics','pausality','uncertainty','emotivity','nonimmediacy','syntax','all']
 	#parsing command line arguments
 	arg_parser = argparse.ArgumentParser(description='A text feature extraction system. Extracts selected features and saves it in one or multiple .csv files')
 	arg_parser.add_argument('texts_dir', help='path to the folder containing news used as dataset')
@@ -63,9 +63,10 @@ def loadCorpus(news_dir):
 	filenames = []
 	tags = []
 
-	for filename in os.listdir(news_dir + '/real'):
+
+	for filename in os.listdir(news_dir + '/true'):
 		ids.append(filename.replace('.txt','-REAL'))
-		filenames.append(news_dir + '/real/' + filename)
+		filenames.append(news_dir + '/true/' + filename)
 		tags.append('REAL')
 
 	# From the fake news folder
@@ -113,6 +114,8 @@ def prepareCalls(parameters, filenames, tags, output_dir):
 			calls.append((metrics.getNonImmediacy,[filenames, output_dir]))
 		elif feature.lower() == 'emotivity':
 			calls.append((metrics.getEmotivity,[filenames, output_dir]))
+		elif feature.lower() == 'syntax':
+			calls.append((syntax.loadSyntax,[filenames]))
 		else:
 			raise ValueError(feature + ' is not a valid feature')
 

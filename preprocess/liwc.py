@@ -83,6 +83,22 @@ class LIWC:
 		return wordFreqs
 
 
+def vectorize(text, liwc = None):
+
+	if liwc == None:
+		liwc = LIWC('var/liwc.txt')
+
+	#loading preprocessor
+	p = utils.preprocessor()
+
+	labels = [liwc.classes[key] for key in liwc.classes]
+	freqs = liwc.calculateFreqs(p.prep(text , useStopWords = False, stem = False), total_normalization = True)
+	freqs = {label:freqs[key] for label,key in zip(labels,freqs)  }
+
+	return pd.DataFrame([freqs], columns=labels)
+
+
+
 #function that loads the corpus and counts LIWC classes frequencies
 def loadLiwc(filenames):
 	data = []
