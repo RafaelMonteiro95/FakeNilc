@@ -9,7 +9,7 @@ For more informations on the project, please visit http://nilc-fakenews.herokuap
 
 ## tl-dr;
 
-Install [Poetry](https://python-poetry.org/) and use the following commands:
+Install [Poetry](https://python-poetry.org/docs/#installation) and use the following commands:
 
 ```Bash
 # clone this repo
