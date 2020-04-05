@@ -17,7 +17,7 @@ sklearn = "^0.0"
 [tool.poetry.scripts]
 reduce = "fakenilc.reduce:main"
 extract = "fakenilc.extract:main"
-classify = "fakenilc.classify:main"
+evaluate = "fakenilc.evaluate:main"
 
 
 [tool.poetry.dev-dependencies]
