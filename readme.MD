@@ -3,7 +3,7 @@ A "Fake News" classifier developed in Python3.
 
 This project contains tools used to train classifiers that identify deceptive texts based on syntatic (Part of Speech Tags) and semantic (LIWC word classes, Unigram bag-of-words) linguistic features.
 
-To train and test models, you must use a corpora with real and fake news. You can use the corpus used during the development of this project: https://github.com/roneysco/Fake.br-Corpus.
+To train and test models, you must use a corpus with real and fake news. You can use the corpus used during the development of this project: https://github.com/roneysco/Fake.br-Corpus.
 
 For more informations on the project, please visit http://nilc-fakenews.herokuapp.com/ or https://sites.google.com/icmc.usp.br/opinando/
 
