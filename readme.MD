@@ -7,6 +7,8 @@ To train and test models, you must use a corpus with real and fake news. You can
 
 For more informations on the project, please visit http://nilc-fakenews.herokuapp.com/ or https://sites.google.com/icmc.usp.br/opinando/
 
+If you want to understand better what should be the workflow when using these tools, check the session How it Works
+
 ## tl-dr;
 
 Install [Poetry](https://python-poetry.org/docs/#installation) and use the following commands:
@@ -25,7 +27,6 @@ poetry run extract -v reduced_texts --features unigram-binary
 # run evaluate to train and test models from the extracted features
 poetry run evaluate -c linearsvc -lc 4 -mf 3 -fs 100 --n_jobs 4 -sm unigram-binary.csv -d
 ```
-
 
 ## Setup
 
@@ -149,6 +150,19 @@ It is also possible to generate avg accuracy values for increasing percentiles o
  #### Example Usage
 
          poetry run evaluate -c linearsvc -lc 2 -mf 3 -fs 100 -sm unigram-binary.csv -d
+
+## How it works
+
+In order to train machine learning models to detect fake news, you must first gather data. 
+
+From 2017 to 2018, we collected 3600 news from trustworthy newspapers, such as G1, Folha and Estadão, and 3600 fake news from shady websites. You can find those news in the [Fake.br corpus](https://github.com/roneysco/Fake.br-Corpus).
+
+In order to guarantee a balanced learning, we must provide similar amount of informations from fake and real news to the machine. In Fake.br corpus, we have paired fake and real news, so that each pair of texts approaches similar topics. Also, using `reduce`, we guarantee that the texts are also similar in size.
+
+Then, we must extract features from the texts. Using `extract`, we can extract a few different feature sets from the texts, from bag of words representations to syntactic and semantic features. The output from this stage is a .csv file with each column being an specific feature and each row being the values of each feature for a given text file.
+
+Finally, we can train and test the extracted attributes with several machine learning algorithms. `evaluate` is responsible for evaluating using K-fold cross validation, which is one of the most used techniques for evaluating ML models. It is also possible to save a .pickle file containing the trained model to use on different apps, like we use on [our website](http://nilc-fakenews.herokuapp.com/).
+
 
 ## Current issues
 
