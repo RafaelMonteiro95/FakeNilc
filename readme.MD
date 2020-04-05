@@ -148,7 +148,7 @@ It is also possible to generate avg accuracy values for increasing percentiles o
 
  #### Example Usage
 
-         poetry run evaluate -c linearsvc -lc 4 -mf 3 -fs 100 --n_jobs 4 -sm unigram-binary.csv -d
+         poetry run evaluate -c linearsvc -lc 2 -mf 3 -fs 100 -sm unigram-binary.csv -d
 
 ## Current issues
 
