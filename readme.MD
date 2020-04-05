@@ -157,4 +157,4 @@ It is also possible to generate avg accuracy values for increasing percentiles o
 
 ## Contact
 
-Get in touch with me through my email[rafaelmonteiro95@gmail.com]().
+Get in touch with me through my email [rafaelmonteiro95@gmail.com]().
